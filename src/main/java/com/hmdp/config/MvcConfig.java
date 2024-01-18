@@ -1,7 +1,7 @@
 package com.hmdp.config;
 
 import com.hmdp.interceptor.LoginInterceptor;
-import com.hmdp.interceptor.RefreshToTokerInterceptor;
+import com.hmdp.interceptor.RefreshToTokenInterceptor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -29,7 +29,7 @@ public class MvcConfig implements WebMvcConfigurer {
 
         //token刷新的拦截器
         registry.addInterceptor(
-                new RefreshToTokerInterceptor(stringRedisTemplate))
+                new RefreshToTokenInterceptor(stringRedisTemplate))
                 .addPathPatterns("/**").order(0);
 
     }

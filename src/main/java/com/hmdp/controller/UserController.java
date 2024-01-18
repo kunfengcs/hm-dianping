@@ -6,6 +6,7 @@ import com.hmdp.dto.Result;
 import com.hmdp.entity.UserInfo;
 import com.hmdp.service.IUserInfoService;
 import com.hmdp.service.IUserService;
+import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +24,7 @@ import javax.servlet.http.HttpSession;
 @Slf4j
 @RestController
 @RequestMapping("/user")
+@Api(tags = "用户模块")
 public class UserController {
 
     @Resource
@@ -34,40 +36,62 @@ public class UserController {
     /**
      * 发送手机验证码
      */
+    @ApiOperation(value = "发送手机验证码", notes = "发送手机验证码并保存验证码")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "phone", value = "手机号", required = true, dataType = "String"),
+    })
     @PostMapping("code")
     public Result sendCode(@RequestParam("phone") String phone, HttpSession session) {
         // TODO 发送短信验证码并保存验证码
-        return Result.fail("功能未完成");
+        return userService.sendCode(phone,session);
     }
 
     /**
      * 登录功能
      * @param loginForm 登录参数，包含手机号、验证码；或者手机号、密码
      */
+    @ApiOperation(value = "登录功能", notes = "实现登录功能")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "登录成功"),
+    })
     @PostMapping("/login")
-    public Result login(@RequestBody LoginFormDTO loginForm, HttpSession session){
+    public Result login(@RequestBody LoginFormDTO loginForm, HttpSession session) {
         // TODO 实现登录功能
-        return Result.fail("功能未完成");
+        return userService.login(loginForm,session);
     }
 
     /**
      * 登出功能
      * @return 无
      */
+    @ApiOperation(value = "登出功能", notes = "实现登出功能")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "登出成功"),
+    })
     @PostMapping("/logout")
     public Result logout(){
-        // TODO 实现登出功能
+        // TODO 实现登出功能 将Redis数据删除
+
         return Result.fail("功能未完成");
     }
 
+    @ApiOperation(value = "获取当前登录用户信息", notes = "获取当前登录的用户并返回")
     @GetMapping("/me")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "获取成功"),
+    })
     public Result me(){
         // TODO 获取当前登录的用户并返回
         return Result.fail("功能未完成");
     }
 
+    @ApiOperation(value = "根据用户ID获取用户信息", notes = "根据用户ID获取用户信息")
+    @ApiImplicitParam(name = "id", value = "用户ID", required = true, dataType = "Long", paramType = "path")
     @GetMapping("/info/{id}")
-    public Result info(@PathVariable("id") Long userId){
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "获取成功"),
+    })
+    public Result info(@PathVariable("id") Long userId) {
         // 查询详情
         UserInfo info = userInfoService.getById(userId);
         if (info == null) {
