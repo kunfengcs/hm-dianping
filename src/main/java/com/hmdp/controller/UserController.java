@@ -3,9 +3,11 @@ package com.hmdp.controller;
 
 import com.hmdp.dto.LoginFormDTO;
 import com.hmdp.dto.Result;
+import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.UserInfo;
 import com.hmdp.service.IUserInfoService;
 import com.hmdp.service.IUserService;
+import com.hmdp.utils.UserHolder;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -81,8 +83,10 @@ public class UserController {
             @ApiResponse(code = 200, message = "获取成功"),
     })
     public Result me(){
-        // TODO 获取当前登录的用户并返回
-        return Result.fail("功能未完成");
+        // 获取当前登录的用户并返回
+        UserDTO user = UserHolder.getUser();
+        log.info("返回当前登录用户"+user);
+        return Result.ok(user);
     }
 
     @ApiOperation(value = "根据用户ID获取用户信息", notes = "根据用户ID获取用户信息")

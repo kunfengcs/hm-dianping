@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.hmdp.dto.UserDTO;
 import com.hmdp.utils.UserHolder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -20,16 +21,20 @@ import static com.hmdp.utils.RedisConstants.LOGIN_USER_TTL;
  * 刷新Token拦截器
  * 保存用户信息
  */
-public class RefreshToTokenInterceptor implements HandlerInterceptor {
-    private final StringRedisTemplate stringRedisTemplate;
+@Slf4j
+public class RefreshTokenInterceptor implements HandlerInterceptor {
 
-    public RefreshToTokenInterceptor(StringRedisTemplate stringRedisTemplate) {
+    private StringRedisTemplate stringRedisTemplate;
+
+    public RefreshTokenInterceptor(StringRedisTemplate stringRedisTemplate) {
         this.stringRedisTemplate = stringRedisTemplate;
     }
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        log.info("接受到请求:"+ request.getRequestURI());
         //1,获取请求头中的token
         String token = request.getHeader("authorization");
+        System.err.println("token:"+token);
         if (StrUtil.isBlank(token)) {
             return true;
         }
@@ -43,6 +48,7 @@ public class RefreshToTokenInterceptor implements HandlerInterceptor {
         //5，将查询到的hash数据转为UserDTO
         UserDTO userDTO = BeanUtil.fillBeanWithMap(userMap, new UserDTO(), false);
         //6,存在，保存用户信息到 ThreadLocal
+        log.info("当前登录用户："+userDTO);
         UserHolder.saveUser(userDTO);
         //7,刷新token 有效期
         stringRedisTemplate.expire(key, LOGIN_USER_TTL, TimeUnit.MINUTES);
