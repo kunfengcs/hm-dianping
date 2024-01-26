@@ -17,6 +17,6 @@ public interface IShopService extends IService<Shop> {
 
     Result queryById(Long id);
 
-    @Transactional
+
     Result update(Shop shop);
 }

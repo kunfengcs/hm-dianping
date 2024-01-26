@@ -10,6 +10,7 @@ import com.hmdp.entity.Shop;
 import com.hmdp.mapper.ShopMapper;
 import com.hmdp.service.IShopService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.hmdp.utils.CacheClient;
 import com.hmdp.utils.RedisData;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -38,11 +39,31 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     @Resource
     private StringRedisTemplate stringRedisTemplate;
 
-    private static final ExecutorService CACHE_REBUILD_EXECUTOR = Executors.newFixedThreadPool(10);
+//    private static final ExecutorService CACHE_REBUILD_EXECUTOR = Executors.newFixedThreadPool(10);
+
+    @Resource
+    private CacheClient cacheClient;
 
     @Override
     public Result queryById(Long id){
-        String key = CACHE_SHOP_KEY + id;
+        // 解决缓存穿透
+//        Shop shop = cacheClient
+//                .queryWithPassThrough(CACHE_SHOP_KEY, id, Shop.class, this::getById, CACHE_SHOP_TTL, TimeUnit.MINUTES);
+
+//         互斥锁解决缓存击穿
+//         Shop shop = cacheClient
+//                 .queryWithMutex(CACHE_SHOP_KEY, id, Shop.class, this::getById, CACHE_SHOP_TTL, TimeUnit.MINUTES);
+
+        // 逻辑过期解决缓存击穿
+         Shop shop = cacheClient
+                 .queryWithLogicalExpire(CACHE_SHOP_KEY, id, Shop.class, this::getById, 20L, TimeUnit.SECONDS);
+
+        if (shop == null) {
+            return Result.fail("店铺不存在！");
+        }
+        // 7.返回
+        return Result.ok(shop);
+/*        String key = CACHE_SHOP_KEY + id;
         //1,从redis查询商品缓存
         String shopJSON = stringRedisTemplate.opsForValue().get(key);
         //2,判断是否存在
@@ -62,10 +83,24 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         stringRedisTemplate.opsForValue()
                 .set(key,JSONUtil.toJsonStr(shop),30L, TimeUnit.MINUTES);
         //7,返回
-        return Result.ok(shop);
+        return Result.ok(shop);*/
     }
 
-    public Shop queryWithMutex(Long id) throws InterruptedException {
+    @Override
+    @Transactional
+    public Result update(Shop shop) {
+        Long id = shop.getId();
+        if (id == null) {
+            return Result.fail("店铺id不能为空");
+        }
+        // 1.更新数据库
+        updateById(shop);
+        // 2.删除缓存
+        stringRedisTemplate.delete(CACHE_SHOP_KEY + id);
+        return Result.ok();
+    }
+
+/*    public Shop queryWithMutex(Long id) throws InterruptedException {
         String key = CACHE_SHOP_KEY + id;
         //1,从Redis中查询商铺缓存
         String shopJson = stringRedisTemplate.opsForValue().get(key);
@@ -147,14 +182,17 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         boolean isLock = tryLock(lockkey);
 //        6,2判断是否获取锁成功
         if (isLock) {
-//        成功 缓存重建
-            try {
-                this.saveShop2Redis(id, 20L);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            } finally {
-                unlock(lockkey);
-            }
+            CACHE_REBUILD_EXECUTOR.submit(() ->{
+                    //        成功 缓存重建
+                    try {
+                        this.saveShop2Redis(id, 20L);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    } finally {
+                        unlock(lockkey);
+                    }
+            });
+
         }
 //        6,4 失败，返回过期的商铺信息
         return shop;
@@ -174,13 +212,13 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     }
 
     private boolean tryLock(String key){
-/*        IfAbsent() redis的setnx方法
-        如果没有这个key，则插入成功，返回1，如果有这个key则插入失败，则返回0，*/
+*//*        IfAbsent() redis的setnx方法
+        如果没有这个key，则插入成功，返回1，如果有这个key则插入失败，则返回0，*//*
         Boolean flag = stringRedisTemplate.opsForValue().setIfAbsent(key, "1", 10, TimeUnit.SECONDS);
         return BooleanUtil.isTrue(flag);
     }
 
     private void unlock(String key){
         stringRedisTemplate.delete(key);
-    }
+    }*/
 }
