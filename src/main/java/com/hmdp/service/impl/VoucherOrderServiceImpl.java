@@ -1,5 +1,8 @@
 package com.hmdp.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.hmdp.dto.Result;
 import com.hmdp.entity.SeckillVoucher;
 import com.hmdp.entity.VoucherOrder;
@@ -50,10 +53,20 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             //库存不足
             return Result.fail("库存不足");
         }
-        //5，扣减库存
-        boolean success = seckillVoucherService.update()
-                .setSql("stock = stock - 1")
-                .eq("voucher_id", voucherId).gt("stock",0).update();//where id = ? and stock > 0
+        //5.一人一单逻辑
+        //5.1用户id
+        Long userId = UserHolder.getUser().getId();
+        Long count = lambdaQuery().eq(VoucherOrder::getUserId, userId)
+                .eq(VoucherOrder::getVoucherId, voucherId).count();
+        //5.1 判断是否存在
+        if (count > 0) {
+            // 用户已经购买过了
+            return Result.fail("用户已经购买过一次！！");
+        }
+        //6, 扣减库存
+        boolean success = seckillVoucherService.lambdaUpdate()
+                .setSql("stock = stock -1")
+                .eq(SeckillVoucher::getVoucherId,voucherId).update();
         if (!success) {
             //扣减库存
             return Result.fail("库存不足");
@@ -63,8 +76,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         //6.1订单id
         long orderId = redisIdWorker.nextId("order");
         voucherOrder.setId(orderId);
-        //6.2用户id
-        Long userId = UserHolder.getUser().getId();
+
         voucherOrder.setUserId(userId);
         //6.3代金劵id
         voucherOrder.setVoucherId(voucherId);
