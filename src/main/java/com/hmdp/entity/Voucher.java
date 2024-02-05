@@ -75,7 +75,7 @@ public class Voucher implements Serializable {
     /**
      * 库存
      */
-    @TableField(exist = false)
+    @TableField(exist = false)//数据库表中不存在的数据，在实体类中指定。
     private Integer stock;
 
     /**
