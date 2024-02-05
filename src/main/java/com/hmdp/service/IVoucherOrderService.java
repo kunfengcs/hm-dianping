@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
  */
 public interface IVoucherOrderService extends IService<VoucherOrder> {
 
-    @Transactional
+
     Result seckillVoucher(Long voucherId);
+
+    Result createVoucherOrder(Long voucherId);
 }

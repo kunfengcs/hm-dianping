@@ -11,6 +11,7 @@ import com.hmdp.service.IVoucherOrderService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmdp.utils.RedisIdWorker;
 import com.hmdp.utils.UserHolder;
+import org.springframework.aop.framework.AopContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,7 +53,14 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             //库存不足
             return Result.fail("库存不足");
         }
-        return createVoucherOrder(voucherId);
+        Long userId = UserHolder.getUser().getId();
+        //为什么用intern(),因为每次userId都是一个新的对象，string不一样，
+        //intern()去字符串常量池中返回和这个字符串一样的字符串地址
+        synchronized (userId.toString().intern()){
+            //获取代理对象（事务）
+            IVoucherOrderService proxy = (IVoucherOrderService) AopContext.currentProxy();
+            return proxy.createVoucherOrder(voucherId);
+        }
     }
 
     @Transactional
@@ -60,36 +68,32 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         //5.一人一单逻辑
         //5.1用户id
         Long userId = UserHolder.getUser().getId();
-        //为什么用intern(),因为每次userId都是一个新的对象，string不一样，
-        //intern()去字符串常量池中返回和这个字符串一样的字符串地址
-        synchronized (userId.toString().intern()) {
-            Long count = lambdaQuery().eq(VoucherOrder::getUserId, userId)
-                    .eq(VoucherOrder::getVoucherId, voucherId).count();
-            //5.1 判断是否存在
-            if (count > 0) {
-                // 用户已经购买过了
-                return Result.fail("用户已经购买过一次！！");
-            }
-            //6, 扣减库存
-            boolean success = seckillVoucherService.lambdaUpdate()
-                    .setSql("stock = stock - 1") // set stock = stock - 1
-                    .eq(SeckillVoucher::getVoucherId, voucherId).gt(SeckillVoucher::getStock, 0) // where id = ? and stock > 0
-                    .update();
-            if (!success) {
-                //扣减库存
-                return Result.fail("库存不足");
-            }
-            //6，创建订单
-            VoucherOrder voucherOrder = new VoucherOrder();
-            //6.1订单id
-            long orderId = redisIdWorker.nextId("order");
-            voucherOrder.setId(orderId);
-
-            voucherOrder.setUserId(userId);
-            //6.3代金劵id
-            voucherOrder.setVoucherId(voucherId);
-            save(voucherOrder);
-            return Result.ok(orderId);
+        Long count = lambdaQuery().eq(VoucherOrder::getUserId, userId)
+                .eq(VoucherOrder::getVoucherId, voucherId).count();
+        //5.1 判断是否存在
+        if (count > 0) {
+            // 用户已经购买过了
+            return Result.fail("用户已经购买过一次！！");
         }
+        //6, 扣减库存
+        boolean success = seckillVoucherService.lambdaUpdate()
+                .setSql("stock = stock - 1") // set stock = stock - 1
+                .eq(SeckillVoucher::getVoucherId, voucherId).gt(SeckillVoucher::getStock, 0) // where id = ? and stock > 0
+                .update();
+        if (!success) {
+            //扣减库存
+            return Result.fail("库存不足");
+        }
+        //6，创建订单
+        VoucherOrder voucherOrder = new VoucherOrder();
+        //6.1订单id
+        long orderId = redisIdWorker.nextId("order");
+        voucherOrder.setId(orderId);
+
+        voucherOrder.setUserId(userId);
+        //6.3代金劵id
+        voucherOrder.setVoucherId(voucherId);
+        save(voucherOrder);
+        return Result.ok(orderId);
     }
 }
