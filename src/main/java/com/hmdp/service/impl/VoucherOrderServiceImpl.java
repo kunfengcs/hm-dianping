@@ -34,7 +34,6 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     @Resource
     private RedisIdWorker redisIdWorker;
     @Override
-    @Transactional
     public Result seckillVoucher(Long voucherId) {
         //1,查询优惠劵
         SeckillVoucher voucher = seckillVoucherService.getById(voucherId);
@@ -53,6 +52,11 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             //库存不足
             return Result.fail("库存不足");
         }
+        return createVoucherOrder(voucherId);
+    }
+
+    @Transactional
+    public synchronized Result createVoucherOrder(Long voucherId) {
         //5.一人一单逻辑
         //5.1用户id
         Long userId = UserHolder.getUser().getId();
@@ -65,8 +69,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         }
         //6, 扣减库存
         boolean success = seckillVoucherService.lambdaUpdate()
-                .setSql("stock = stock -1")
-                .eq(SeckillVoucher::getVoucherId,voucherId).update();
+                .setSql("stock = stock - 1") // set stock = stock - 1
+                .eq(SeckillVoucher::getVoucherId, voucherId).gt(SeckillVoucher::getStock, 0) // where id = ? and stock > 0
+                .update();
         if (!success) {
             //扣减库存
             return Result.fail("库存不足");
