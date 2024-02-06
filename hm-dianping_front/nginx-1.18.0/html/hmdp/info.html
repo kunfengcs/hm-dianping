@@ -2,8 +2,10 @@
 <html lang="en">
 
 <head>
+    <!-- 设置文档编码和视口 -->
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <!-- 设置页面标题 -->
     <title>黑马点评</title>
     <!-- 引入样式 -->
     <link rel="stylesheet" href="./css/element.css">
@@ -11,12 +13,19 @@
     <link href="./imgs/icons/山工点评.ico" rel="icon" type="image/x-ico">
     <link href="./css/info.css" rel="stylesheet">
 
+    <!-- 自定义样式 -->
     <style type="text/css">
-        .el-tabs--bottom .el-tabs__item.is-bottom:nth-child(2), .el-tabs--bottom .el-tabs__item.is-top:nth-child(2), .el-tabs--top .el-tabs__item.is-bottom:nth-child(2), .el-tabs--top .el-tabs__item.is-top:nth-child(2) {
+        /* 调整选项卡样式 */
+        .el-tabs--bottom .el-tabs__item.is-bottom:nth-child(2),
+        .el-tabs--bottom .el-tabs__item.is-top:nth-child(2),
+        .el-tabs--top .el-tabs__item.is-bottom:nth-child(2),
+        .el-tabs--top .el-tabs__item.is-top:nth-child(2) {
             padding-left: 15px;
         }
 
-        .el-tabs, .el-tab-pane {
+        /* 设置选项卡和选项卡内容高度 */
+        .el-tabs,
+        .el-tab-pane {
             height: 100%;
         }
 
@@ -32,53 +41,83 @@
 </head>
 
 <body>
+    <!-- Vue 应用根节点 -->
 <div id="app">
+        <!-- 页面头部 -->
     <div class="header">
+            <!-- 返回按钮 -->
         <div class="header-back-btn" @click="goBack"><i class="el-icon-arrow-left"></i></div>
+            <!-- 页面标题 -->
         <div class="header-title">个人主页&nbsp;&nbsp;&nbsp;</div>
     </div>
+        <!-- 基本信息区域 -->
     <div class="basic">
+            <!-- 用户头像 -->
         <div class="basic-icon">
             <img :src="user.icon || '/imgs/icons/default-icon.png'" alt="">
         </div>
+            <!-- 用户基本信息 -->
         <div class="basic-info">
+                <!-- 用户昵称 -->
             <div class="name">{{user.nickName}}</div>
+                <!-- 用户所在地 -->
             <span>杭州</span>
+                <!-- 编辑资料按钮 -->
             <div class="edit-btn" @click="toEdit">
                 编辑资料
             </div>
         </div>
+            <!-- 退出登录按钮 -->
         <div class="logout-btn" @click="logout">
             退出登录
         </div>
     </div>
+        <!-- 个人简介区域 -->
     <div class="introduce">
         <span v-if="info.introduce"></span>
         <span v-else>添加个人简介，让大家更好的认识你 <i class="el-icon-edit"></i></span>
     </div>
+        <!-- 内容区域 -->
     <div class="content">
+            <!-- 使用 Element UI 的选项卡组件 -->
         <el-tabs v-model="activeName" @tab-click="handleClick">
+                <!-- 笔记选项卡 -->
             <el-tab-pane label="笔记" name="1">
+                    <!-- 遍历显示用户的笔记 -->
                 <div v-for="b in blogs" :key="b.id" class="blog-item">
+                        <!-- 笔记图片 -->
                     <div class="blog-img"><img :src="b.images.split(',')[0]" alt=""></div>
+                        <!-- 笔记信息 -->
                     <div class="blog-info">
+                            <!-- 笔记标题 -->
                         <div class="blog-title">{{b.title}}</div>
+                            <!-- 点赞数 -->
                         <div class="blog-liked"><img src="/imgs/thumbup.png" alt=""> {{b.liked}}</div>
+                            <!-- 评论数 -->
                         <div class="blog-comments"><i class="el-icon-chat-dot-round"></i> {{b.comments}}</div>
                     </div>
                 </div>
             </el-tab-pane>
+                <!-- 评价选项卡 -->
             <el-tab-pane label="评价" name="2">评价</el-tab-pane>
+                <!-- 粉丝选项卡 -->
             <el-tab-pane label="粉丝(0)" name="3">粉丝(0)</el-tab-pane>
+                <!-- 关注选项卡 -->
             <el-tab-pane label="关注(0)" name="4">
+                    <!-- 关注的人的博客列表 -->
                 <div class="blog-list" @scroll="onScroll">
                     <div class="blog-box" v-for="b in blogs2" :key="b.id">
+                            <!-- 博客图片 -->
                         <div class="blog-img2" @click="toBlogDetail(b)"><img :src="b.img" alt=""></div>
+                            <!-- 博客标题 -->
                         <div class="blog-title">{{b.title}}</div>
+                            <!-- 博客作者信息 -->
                         <div class="blog-foot">
-                            <div class="blog-user-icon"><img :src="b.icon || '/imgs/icons/default-icon.png'" alt="">
-                            </div>
+                                <!-- 作者头像 -->
+                                <div class="blog-user-icon"><img :src="b.icon || '/imgs/icons/default-icon.png'" alt=""></div>
+                                <!-- 作者昵称 -->
                             <div class="blog-user-name">{{b.name}}</div>
+                                <!-- 点赞按钮 -->
                             <div class="blog-liked" @click="addLike(b)">
                                 <svg t="1646634642977" class="icon" viewBox="0 0 1024 1024" version="1.1"
                                      xmlns="http://www.w3.org/2000/svg" p-id="2187" width="14" height="14">
@@ -86,6 +125,7 @@
                                             d="M160 944c0 8.8-7.2 16-16 16h-32c-26.5 0-48-21.5-48-48V528c0-26.5 21.5-48 48-48h32c8.8 0 16 7.2 16 16v448zM96 416c-53 0-96 43-96 96v416c0 53 43 96 96 96h96c17.7 0 32-14.3 32-32V448c0-17.7-14.3-32-32-32H96zM505.6 64c16.2 0 26.4 8.7 31 13.9 4.6 5.2 12.1 16.3 10.3 32.4l-23.5 203.4c-4.9 42.2 8.6 84.6 36.8 116.4 28.3 31.7 68.9 49.9 111.4 49.9h271.2c6.6 0 10.8 3.3 13.2 6.1s5 7.5 4 14l-48 303.4c-6.9 43.6-29.1 83.4-62.7 112C815.8 944.2 773 960 728.9 960h-317c-33.1 0-59.9-26.8-59.9-59.9v-455c0-6.1 1.7-12 5-17.1 69.5-109 106.4-234.2 107-364h41.6z m0-64h-44.9C427.2 0 400 27.2 400 60.7c0 127.1-39.1 251.2-112 355.3v484.1c0 68.4 55.5 123.9 123.9 123.9h317c122.7 0 227.2-89.3 246.3-210.5l47.9-303.4c7.8-49.4-30.4-94.1-80.4-94.1H671.6c-50.9 0-90.5-44.4-84.6-95l23.5-203.4C617.7 55 568.7 0 505.6 0z"
                                             p-id="2188" :fill="b.isLike ? '#ff6633' : '#82848a'"></path>
                                 </svg>
+                                    <!-- 点赞数 -->
                                 {{b.liked}}
                             </div>
                         </div>
@@ -94,42 +134,52 @@
             </el-tab-pane>
         </el-tabs>
     </div>
+        <!-- 底部导航 -->
     <foot-bar :active-btn="4"></foot-bar>
 </div>
+    <!-- 引入 Vue.js -->
 <script src="./js/vue.js"></script>
+    <!-- 引入 Axios -->
 <script src="./js/axios.min.js"></script>
-<!-- 引入组件库 -->
+    <!-- 引入 Element UI -->
 <script src="./js/element.js"></script>
+    <!-- 公共方法 -->
 <script src="./js/common.js"></script>
+    <!-- 底部导航组件 -->
 <script src="./js/footer.js"></script>
+    <!-- Vue 实例 -->
 <script>
     const app = new Vue({
         el: "#app",
         data: {
-            user: "",
-            activeName: "1",
-            info: {},
-            blogs: [],
-            blogs2: [], // 关注的人的播客
+                user: "", // 用户信息
+                activeName: "1", // 当前激活的选项卡名称
+                info: {}, // 用户详情信息
+                blogs: [], // 用户的笔记列表
+                blogs2: [], // 关注的人的播客
             params: {
                 minTime: 0, // 上一次拉取到的时间戳
                 offset: 0, // 偏移量
             },
-            count: 5,
-            isReachBottom: false,
+                count: 5, // 初始加载数量
+                isReachBottom: false, // 是否到达底部
         },
         created() {
+                // 初始化页面，获取用户信息
             this.queryUser();
         },
         methods: {
+                // 加载更多笔记
             load() {
                 this.count += 2;
             },
+                // 查询用户自己的笔记
             queryBlogs() {
                 axios.get("/blog/of/me")
                     .then(({data}) => this.blogs = data)
                     .catch(this.$message.error)
             },
+                // 查询关注的人的笔记
             queryBlogsOfFollow(clear) {
                 if (clear) {
                     this.params.offset = 0;
@@ -150,11 +200,11 @@
                     })
                     .catch(e => console.log(e))
             },
-            queryUser() {
                 // 查询用户信息
+            queryUser() {
                 axios.get("/user/me")
                     .then(({data}) => {
-                        // 保存用户
+                            // 保存用户信息
                         this.user = data;
                         // 查询用户详情
                         this.queryUserInfo();
@@ -162,65 +212,80 @@
                         this.queryBlogs();
                     })
                     .catch(err => {
+                            // 如果没有登录，跳转至登录页面
                         location.href = "login.html"
                     })
             },
+                // 返回上一页
             goBack() {
                 history.back();
             },
+                // 查询用户详情信息
             queryUserInfo() {
                 axios.get("/user/info/" + this.user.id)
                     .then(({data}) => {
                         if (!data) {
                             return
                         }
-                        // 保存用户详情
+                            // 保存用户详情信息
                         this.info = data;
                         // 保存到本地
                         sessionStorage.setItem("userInfo", JSON.stringify(data))
                     })
                     .catch(err => {
+                            // 查询失败，提示错误
                         this.$message.error(err);
                     })
             },
+                // 跳转至编辑资料页面
             toEdit() {
                 location.href = 'info-edit.html'
             },
+                // 退出登录
             logout() {
                 axios.post("/user/logout")
                     .then(() => {
                         // 清理session
                         sessionStorage.removeItem("token")
-                        // 跳转
+                            // 退出登录，跳转至首页
                         location.href = "/"
                     })
                     .catch(this.$message.error)
             },
+                // 点击选项卡事件处理
             handleClick(r) {
                 if (r.name === '4') {
+                        // 如果点击的是关注选项卡，查询关注的人的笔记
                     this.queryBlogsOfFollow(true);
                 }
             },
+                // 点赞操作
             addLike(b) {
                 axios.put("/blog/like/" + b.id)
                     .then(({data}) => {
+                            // 更新点赞信息
                         this.queryBlogById(b);
                     })
                     .catch(err => {
+                            // 点赞失败，提示错误
                         this.$message.error(err)
                     })
             },
+                // 根据博客 ID 查询博客信息
             queryBlogById(b) {
                 axios.get("/blog/" + b.id)
                     .then(({data}) => {
+                            // 更新点赞数和状态
                         b.liked = data.liked;
                         b.isLike = data.isLike;
                     })
                     .catch(() => {
+                            // 查询失败，点赞数+1
                         this.$message.error
                         b.liked++;
                     })
             },
+                // 滚动事件处理
             onScroll(e) {
                 let scrollTop = e.target.scrollTop;
                 let offsetHeight = e.target.offsetHeight;

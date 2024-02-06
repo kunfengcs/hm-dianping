@@ -15,7 +15,11 @@ html,body,#app{
 }
 .el-tabs__active-bar {
     height: 4px;
-    background-image: linear-gradient(to right, #F63, #f5b9a2);
+    background-image: linear-gradient(to right, blue, #3a8ee6);
+}
+
+.el-tabs__item.is-active {
+    color: blue;
 }
 .foot {
     width: 100%;
@@ -49,7 +53,7 @@ html,body,#app{
     text-align: center;
 }
 .active{
-    color: #ff6633;
+    color: #3a8ee6;
 }
 
 /*element-ui的评价星星间隙*/

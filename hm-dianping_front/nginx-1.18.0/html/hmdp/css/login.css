@@ -48,13 +48,13 @@ input[type="radio"] + label::before {
     height: 0.7em;
     margin-right: .4em;
     border-radius: 50%;
-    border: 2px solid #F63;
+    border: 2px solid #3a8ee6;
     text-indent: .15em;
     line-height: 1; 
     padding: .2em;
 }
 input[type="radio"]:checked + label::before {
-    background-color: #F63;
+    background-color: #3a8ee6;
     background-clip: content-box;
     padding: .2em;
 }
