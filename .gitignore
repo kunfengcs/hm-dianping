@@ -31,3 +31,4 @@ build/
 
 ### VS Code ###
 .vscode/
+/hm-dianping_front/nginx-1.18.0/logs/
