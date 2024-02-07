@@ -72,6 +72,8 @@
             退出登录
         </div>
     </div>
+<!--  TODD  在这加一个根据是否是商户出现的添加优惠卷按钮-->
+        <el-button v-if="user.isShop === 1"><a href="/voucher-add.html">添加优惠劵</a></el-button>
         <!-- 个人简介区域 -->
     <div class="introduce">
         <span v-if="info.introduce"></span>
@@ -300,7 +302,7 @@
                 } else {
                     this.isReachBottom = false
                 }
-            }
+            },
         },
 
     })

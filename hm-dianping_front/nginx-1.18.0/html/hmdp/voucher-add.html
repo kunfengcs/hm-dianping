@@ -56,10 +56,6 @@
         <!-- 表单 -->
         <el-form ref="voucherForm" :model="voucher" label-width="100px">
             <!-- 商铺ID -->
-            <!--<el-form-item label="商铺ID" class="form-item">
-                <el-input v-model="voucher.shopId"></el-input>
-                &lt;!&ndash; 这里应该显示商铺名称，待自动查询商户信息完成后更新 &ndash;&gt;
-            </el-form-item>-->
             <el-form-item label="商铺ID" class="form-item">
                 <el-input v-model="voucher.shopId" @input="fetchShopInfo"></el-input>
                 <span class="shop-name" v-if="shopName">{{ shopName }}</span>
