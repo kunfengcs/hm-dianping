@@ -62,5 +62,8 @@ public class User implements Serializable {
      */
     private LocalDateTime updateTime;
 
-
+    /**
+     * 是否是商户
+     */
+    private int isShop;
 }
