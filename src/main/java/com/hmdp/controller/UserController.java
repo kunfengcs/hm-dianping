@@ -1,9 +1,11 @@
 package com.hmdp.controller;
 
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.hmdp.dto.LoginFormDTO;
 import com.hmdp.dto.Result;
 import com.hmdp.dto.UserDTO;
+import com.hmdp.entity.User;
 import com.hmdp.entity.UserInfo;
 import com.hmdp.service.IUserInfoService;
 import com.hmdp.service.IUserService;
@@ -107,4 +109,27 @@ public class UserController {
         // 返回
         return Result.ok(info);
     }
+    // TODO 加一个更新为商户接口 ，通过手机号，把is_shop 字段改为1
+
+    /**
+     * 更新用户为商户接口
+     * @param phone 手机号
+     * @return 返回更新结果
+     */
+    @ApiOperation(value = "更新用户为商户", notes = "通过手机号更新用户为商户")
+    @ApiImplicitParam(name = "phone", value = "手机号", required = true, dataType = "String")
+    @PostMapping("/makeMerchant")
+    public Result makeMerchant(@RequestParam("phone") String phone) {
+        // 根据手机号查找用户
+        User user = userService.getOne(new QueryWrapper<User>().eq("phone", phone));
+        if (user == null) {
+            // 如果用户不存在，返回错误提示
+            return Result.fail("用户不存在");
+        }
+        // 将用户设为商户
+        user.setIsShop(1);
+        userService.updateById(user);
+        return Result.ok("用户已更新为商户");
+    }
+
 }
