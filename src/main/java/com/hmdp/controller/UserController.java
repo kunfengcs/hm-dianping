@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
+import java.util.Map;
 
 /**
  * <p>
@@ -110,16 +111,18 @@ public class UserController {
         return Result.ok(info);
     }
     // TODO 加一个更新为商户接口 ，通过手机号，把is_shop 字段改为1
+    // 谁可以访问这个接口，想法：可以再加一个拦截器 只有特定的用户可以访问
 
     /**
      * 更新用户为商户接口
-     * @param phone 手机号
+     * @param requestBody 手机号
      * @return 返回更新结果
      */
     @ApiOperation(value = "更新用户为商户", notes = "通过手机号更新用户为商户")
     @ApiImplicitParam(name = "phone", value = "手机号", required = true, dataType = "String")
     @PostMapping("/makeMerchant")
-    public Result makeMerchant(@RequestParam("phone") String phone) {
+    public Result makeMerchant(@RequestBody Map<String, String> requestBody) {
+        String phone = requestBody.get("phone");
         // 根据手机号查找用户
         User user = userService.getOne(new QueryWrapper<User>().eq("phone", phone));
         if (user == null) {
@@ -129,6 +132,7 @@ public class UserController {
         // 将用户设为商户
         user.setIsShop(1);
         userService.updateById(user);
+        log.info("用户"+ phone +"更新为商户");
         return Result.ok("用户已更新为商户");
     }
 
