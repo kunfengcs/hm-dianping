@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <title>新增优惠券和秒杀券</title>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="./css/element.css">
+    <link href="./css/main.css" rel="stylesheet">
+    <link href="./imgs/icons/山工点评.ico" rel="icon" type="image/x-ico">
+    <link href="./css/info.css" rel="stylesheet">
+
+    <style type="text/css">
+        .voucher-form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .form-item {
+            margin-bottom: 20px;
+        }
+        .button-wrapper {
+            display: flex;
+            justify-content: space-between;
+        }
+        .button-wrapper button {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+        .el-button--primary.is-plain {
+            color: #66b1ff;
+            background: #ecf5ff;
+            border-color: #b3d8ff;
+        }
+        .el-radio__input.is-checked+.el-radio__label {
+            color: blue;
+        }
+        .el-radio__input.is-checked .el-radio__inner {
+            background: blue;
+        }
+        .el-radio__inner:hover {
+            border-color: blue;
+        }
+        .el-radio__input.is-checked .el-radio__inner {
+            border-color: blue;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="header">
+        <div class="header-back-btn" @click="goBack"><i class="el-icon-arrow-left"></i></div>
+        <div class="header-title">新增优惠券和秒杀券</div>
+    </div>
+    <div class="voucher-form">
+        <el-form ref="voucherForm" :model="voucher" label-width="100px">
+            <el-form-item label="商铺ID" class="form-item">
+                <el-input v-model="voucher.shopId"></el-input>
+            </el-form-item>
+            <el-form-item label="优惠券标题" class="form-item">
+                <el-input v-model="voucher.title"></el-input>
+            </el-form-item>
+            <el-form-item label="副标题" class="form-item">
+                <el-input v-model="voucher.subTitle"></el-input>
+            </el-form-item>
+            <el-form-item label="使用规则" class="form-item">
+                <el-input v-model="voucher.rules"></el-input>
+            </el-form-item>
+            <el-form-item label="支付金额" class="form-item">
+                <el-input v-model="voucher.payValue"></el-input>
+            </el-form-item>
+            <el-form-item label="抵扣金额" class="form-item">
+                <el-input v-model="voucher.actualValue"></el-input>
+            </el-form-item>
+            <el-form-item label="优惠券类型" class="form-item">
+                <el-radio v-model="voucher.type" :label="0">普通优惠券</el-radio>
+                <el-radio v-model="voucher.type" :label="1">秒杀券</el-radio>
+            </el-form-item>
+            <el-form-item label="库存" class="form-item" v-if="voucher.type === 1">
+                <el-input v-model="voucher.stock"></el-input>
+            </el-form-item>
+            <el-form-item label="生效时间" class="form-item" v-if="voucher.type === 1">
+                <el-date-picker v-model="voucher.beginTime" type="datetime"></el-date-picker>
+            </el-form-item>
+            <el-form-item label="失效时间" class="form-item" v-if="voucher.type === 1">
+                <el-date-picker v-model="voucher.endTime" type="datetime"></el-date-picker>
+            </el-form-item>
+            <div class="button-wrapper">
+                <el-button type="primary" plain v-if="voucher.type === 0" @click="addVoucher">新增优惠券</el-button>
+                <el-button type="primary" plain v-if="voucher.type === 1" @click="addSeckillVoucher">新增秒杀券</el-button>
+                <el-button @click="goBack" plain>返回</el-button>
+            </div>
+        </el-form>
+    </div>
+    <foot-bar :active-btn="4"></foot-bar>
+</div>
+<script src="./js/vue.js"></script>
+<script src="./js/axios.min.js"></script>
+<!-- 引入组件库 -->
+<script src="./js/element.js"></script>
+<script src="./js/common.js"></script>
+<script src="./js/footer.js"></script>
+<script>
+    const app = new Vue({
+        el: "#app",
+        data: {
+            voucher: {
+                shopId: '',
+                title: '',
+                subTitle: '',
+                rules: '',
+                payValue: '',
+                actualValue: '',
+                stock: '',
+                type: 0, // 默认为普通优惠券类型
+                beginTime: '', // 秒杀券生效时间
+                endTime: '' // 秒杀券失效时间
+            }
+        },
+        methods: {
+            addVoucher() {
+                axios.post("/voucher", this.voucher)
+                    .then(response => {
+                        this.$message.success("新增优惠券成功！");
+                        console.log("新增优惠券成功，优惠券ID：" + response.data.data);
+                    })
+                    .catch(error => {
+                        this.$message.error("新增优惠券失败：" + error);
+                    });
+            },
+            addSeckillVoucher() {
+                axios.post("/voucher/seckill", this.voucher)
+                    .then(response => {
+                        this.$message.success("新增秒杀券成功！");
+                        console.log("新增秒杀券成功，秒杀券ID：" + response.data.data);
+                    })
+                    .catch(error => {
+                        this.$message.error("新增秒杀券失败：" + error);
+                    });
+            },
+            goBack() {
+                history.back();
+            }
+        }
+    });
+</script>
+</body>
+</html>
