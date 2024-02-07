@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <!-- 设置页面在移动设备上的显示方式 -->
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <title>新增优惠券和秒杀券</title>
     <!-- 引入样式 -->
@@ -52,22 +53,33 @@
         <div class="header-title">新增优惠券和秒杀券</div>
     </div>
     <div class="voucher-form">
+        <!-- 表单 -->
         <el-form ref="voucherForm" :model="voucher" label-width="100px">
-            <el-form-item label="商铺ID" class="form-item">
+            <!-- 商铺ID -->
+            <!--<el-form-item label="商铺ID" class="form-item">
                 <el-input v-model="voucher.shopId"></el-input>
+                &lt;!&ndash; 这里应该显示商铺名称，待自动查询商户信息完成后更新 &ndash;&gt;
+            </el-form-item>-->
+            <el-form-item label="商铺ID" class="form-item">
+                <el-input v-model="voucher.shopId" @input="fetchShopInfo"></el-input>
+                <span class="shop-name" v-if="shopName">{{ shopName }}</span>
             </el-form-item>
+            <!-- 优惠券标题 -->
             <el-form-item label="优惠券标题" class="form-item">
                 <el-input v-model="voucher.title"></el-input>
             </el-form-item>
+            <!-- 副标题 -->
             <el-form-item label="副标题" class="form-item">
                 <el-input v-model="voucher.subTitle"></el-input>
             </el-form-item>
             <el-form-item label="使用规则" class="form-item">
                 <el-input v-model="voucher.rules"></el-input>
             </el-form-item>
+            <!-- 支付金额 -->
             <el-form-item label="支付金额" class="form-item">
                 <el-input v-model="voucher.payValue"></el-input>
             </el-form-item>
+            <!-- 抵扣金额 -->
             <el-form-item label="抵扣金额" class="form-item">
                 <el-input v-model="voucher.actualValue"></el-input>
             </el-form-item>
@@ -104,19 +116,37 @@
         el: "#app",
         data: {
             voucher: {
-                shopId: '',
-                title: '',
-                subTitle: '',
-                rules: '',
-                payValue: '',
-                actualValue: '',
-                stock: '',
+                shopId: '', // 商铺ID
+                title: '', // 优惠券标题
+                subTitle: '', // 副标题
+                rules: '', // 使用规则
+                payValue: '', // 支付金额
+                actualValue: '', // 抵扣金额
+                stock: '', // 库存
                 type: 0, // 默认为普通优惠券类型
                 beginTime: '', // 秒杀券生效时间
                 endTime: '' // 秒杀券失效时间
-            }
+            },
+            shopName: '', // 新增：用于存储查询到的商户名称
         },
         methods: {
+            // 根据商户ID查询商户信息的方法（已更新）
+            fetchShopInfo() {
+                if (this.voucher.shopId) {
+                    axios.get("/shop/" + this.voucher.shopId)
+                        .then(response => {
+                            if (response.data.success && response.data.data.name) {
+                                this.shopName = response.data.data.name;
+                            } else {
+                                this.$message.error("未能获取到商户信息！");
+                            }
+                        })
+                        .catch(error => {
+                            this.$message.error("查询商户信息失败：" + error);
+                        });
+                }
+            },
+            // 新增普通优惠券
             addVoucher() {
                 axios.post("/voucher", this.voucher)
                     .then(response => {
@@ -127,6 +157,7 @@
                         this.$message.error("新增优惠券失败：" + error);
                     });
             },
+            // 新增秒杀券
             addSeckillVoucher() {
                 axios.post("/voucher/seckill", this.voucher)
                     .then(response => {
@@ -137,6 +168,7 @@
                         this.$message.error("新增秒杀券失败：" + error);
                     });
             },
+            // 返回上一页
             goBack() {
                 history.back();
             }
