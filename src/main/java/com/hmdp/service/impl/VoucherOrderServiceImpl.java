@@ -10,8 +10,10 @@ import com.hmdp.mapper.VoucherOrderMapper;
 import com.hmdp.service.IVoucherOrderService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmdp.utils.RedisIdWorker;
+import com.hmdp.utils.SimpleRedisLock;
 import com.hmdp.utils.UserHolder;
 import org.springframework.aop.framework.AopContext;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +34,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     @Resource
     private SeckillVoucherServiceImpl seckillVoucherService;
 
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
     @Resource
     private RedisIdWorker redisIdWorker;
     @Override
@@ -54,13 +58,37 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             return Result.fail("库存不足");
         }
         Long userId = UserHolder.getUser().getId();
+        //创建锁对象
+        SimpleRedisLock lock = new SimpleRedisLock("order:" + userId, stringRedisTemplate);
+        //获取锁对象
+        boolean isLock = lock.tryLock(1200);
+        //加锁失败
+        if (!isLock) {
+            return Result.fail("不允许重复下单");
+        }
+        try {
+            //获取代理对象（事务）
+            IVoucherOrderService proxy = (IVoucherOrderService) AopContext.currentProxy();
+            return proxy.createVoucherOrder(voucherId);
+        } finally {
+            //释放锁
+            lock.unlock();
+        }
+/*
         //为什么用intern(),因为每次userId都是一个新的对象，string不一样，
         //intern()去字符串常量池中返回和这个字符串一样的字符串地址
         synchronized (userId.toString().intern()){
             //获取代理对象（事务）
+            *//*AopContext.currentProxy() 是Spring AOP提供的一个方法，
+            它的作用是在当前被代理的方法内部获取当前代理对象本身。
+            因为有时在业务逻辑中，可能需要调用其他未添加切面的方法，
+            而直接使用 this 关键字会访问到目标业务对象而非代理对象，
+            这时就需要用到 currentProxy() 方法来获取完整的代理对象，
+            从而确保后续调用的方法同样能享受到AOP代理带来的增强效果。*//*
             IVoucherOrderService proxy = (IVoucherOrderService) AopContext.currentProxy();
             return proxy.createVoucherOrder(voucherId);
         }
+        */
     }
 
     @Transactional
