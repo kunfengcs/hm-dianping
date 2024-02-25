@@ -1,7 +1,8 @@
 # hm-dianping_back
 
 #### 介绍
-黑马点评后端
+毕业设计项目
+同城生活O2O系统平台后端
 
 #### [项目前端](hm-dianping_front/nginx-1.18.0/html/hmdp)
 ## 使用的技术
