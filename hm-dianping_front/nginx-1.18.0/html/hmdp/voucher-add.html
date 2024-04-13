@@ -55,7 +55,7 @@
     <div class="voucher-form">
         <!-- 表单 -->
         <el-form ref="voucherForm" :model="voucher" label-width="100px">
-            <!-- 商铺ID -->
+            <!-- 商铺ID TODO 商户权限过大，应固定商户id，通过手机号查shop表得到-->
             <el-form-item label="商铺ID" class="form-item">
                 <el-input v-model="voucher.shopId" @input="fetchShopInfo"></el-input>
                 <span class="shop-name" v-if="shopName">{{ shopName }}</span>

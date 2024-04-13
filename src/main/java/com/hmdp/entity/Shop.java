@@ -38,6 +38,9 @@ public class Shop implements Serializable {
      */
     private String name;
 
+    // TODO 添加一个商户手机号字段，用来在用户登录时识别为商户，
+    //  user更新为商户后根据user表的手机号和商户表手机号对应，得到商户用户的商户id
+
     /**
      * 商铺类型的id
      */
