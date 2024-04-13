@@ -43,6 +43,12 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
     @Resource
     private RedissonClient redissonClient;
+    /**
+     * 参与秒杀活动，尝试购买指定优惠券
+     *
+     * @param voucherId 待购买的优惠券ID
+     * @return 秒杀结果，包含成功状态及可能的订单ID或错误信息
+     */
     @Override
     public Result seckillVoucher(Long voucherId) {
         //1,查询优惠劵
@@ -97,6 +103,12 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         */
     }
 
+    /**
+     * 在事务中创建订单，确保库存扣减与订单生成的原子性
+     *
+     * @param voucherId 待购买的优惠券ID
+     * @return 创建订单结果，包含成功状态及订单ID或错误信息
+     */
     @Transactional
     public Result createVoucherOrder(Long voucherId) {
         //5.一人一单逻辑
@@ -112,7 +124,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         //6, 扣减库存
         boolean success = seckillVoucherService.lambdaUpdate()
                 .setSql("stock = stock - 1") // set stock = stock - 1
-                .eq(SeckillVoucher::getVoucherId, voucherId).gt(SeckillVoucher::getStock, 0) // where id = ? and stock > 0
+                .eq(SeckillVoucher::getVoucherId, voucherId)
+                .gt(SeckillVoucher::getStock, 0) // where id = ? and stock > 0
                 .update();
         if (!success) {
             //扣减库存
