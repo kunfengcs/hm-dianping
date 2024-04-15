@@ -30,3 +30,8 @@
 #### 前端
 1.  配置[nginx.conf](nginx_conf/nginx.conf)
 2.  将项目放入nginx/html 下
+
+### 运行
+#### 需要在 Nginx中创建temp文件夹
+否则Nginx 无法启动
+报错：2024/04/15 13:39:34 [emerg] 29240#27228: CreateDirectory() "E:\sh_sg\graduation_project\hmdp\hm-dianping_front\nginx-1.18.0/temp/client_body_temp" failed (3: The system cannot find the path specified)
