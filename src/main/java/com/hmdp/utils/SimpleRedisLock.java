@@ -10,6 +10,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * SimpleRedisLock 基于lua 脚本
+ */
 public class SimpleRedisLock implements ILock{
 
     private String name;
