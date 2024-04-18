@@ -30,4 +30,7 @@ end
 redis.call('incrby',stockKey,-1)
 -- 3.5 下单（保存） sadd orderKey userId
 redis.call('sadd',orderKey,userId)
+
+-- 3.6 发送消息到队列中，XXDD stream.orders * K1,V1 ,K2,V2,...
+redis.call('xadd','stream.orders','*','userId',userId,'voucherId',voucherId,'id',orderId)
 return 0
