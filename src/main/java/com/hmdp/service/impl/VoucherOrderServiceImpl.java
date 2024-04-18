@@ -26,8 +26,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 /**
  * <p>
@@ -66,27 +65,34 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
 
     //异步处理线程池  -----不应该用单线程，出于简单
+    //private static final ExecutorService SECKILL_ORDER_EXECUTOR = Executors.newSingleThreadExecutor();
 
-    private static final ExecutorService SECKILL_ORDER_EXECUTOR = Executors.newSingleThreadExecutor();
+    // 使用固定大小的线程池，可以根据实际需求调整线程数量
+    private static final ExecutorService SECKILL_ORDER_EXECUTOR = new ThreadPoolExecutor(
+            4, 8, // 核心线程数和最大线程数
+            10, TimeUnit.SECONDS, // 空闲线程存活时间
+            new LinkedBlockingQueue<>(1024), // 阻塞队列大小
+            new ThreadPoolExecutor.CallerRunsPolicy() // 当线程池饱和时，提交任务的线程直接执行该任务
+    );
 
     IVoucherOrderService proxy ;
 
 
     @PostConstruct
     private void init(){
-        SECKILL_ORDER_EXECUTOR.submit(thread);
+        SECKILL_ORDER_EXECUTOR.submit(this::processOrdersFromStream);
     }
 
-    static String queueName = "stream.orders";
+    private static final String QUEUE_NAME = "stream.orders";
     //redis stream 队列
-    Thread thread = new Thread(() -> {
+    private void processOrdersFromStream() {
         while (true) {
             try {
                 //1,获取消息队列中的订单 XREADFROUP GROUP g1 c1 COUNT 1 BLOCK 2000 STREAMS stream.orders >  // 参数>表示未被组内消费的起始消息
                 List<MapRecord<String, Object, Object>> list = stringRedisTemplate.opsForStream().read(
                         Consumer.from("g1", "c1"),
                         StreamReadOptions.empty().count(1).block(Duration.ofSeconds(2)),
-                        StreamOffset.create(queueName, ReadOffset.lastConsumed()));
+                        StreamOffset.create(QUEUE_NAME, ReadOffset.lastConsumed()));
                 //2,判断消息获取是否成功
                 if(list == null || list.isEmpty()){
                     //如果获取失败，说明没有消息，继续下一次循环
@@ -99,7 +105,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                 //4,如果获取成功，可以下单
                 handleVoucherOrder(voucherOrder);
                 //5,ACK 确认 SACK stream.orders g1 id
-                stringRedisTemplate.opsForStream().acknowledge(queueName,"g1",record.getId());
+                stringRedisTemplate.opsForStream().acknowledge(QUEUE_NAME,"g1",record.getId());
             } catch (Exception e) {
                 log.error("处理订单异常",e);
                 try {
@@ -107,7 +113,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                     List<MapRecord<String, Object, Object>> list = stringRedisTemplate.opsForStream().read(
                             Consumer.from("g1", "c1"),
                             StreamReadOptions.empty().count(1),
-                            StreamOffset.create(queueName, ReadOffset.lastConsumed())
+                            StreamOffset.create(QUEUE_NAME, ReadOffset.lastConsumed())
                     );
                     //2,判断消息获取是否成功
                     if(list == null || list.isEmpty()){
@@ -121,7 +127,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                     //4,如果获取成功，可以下单
                     handleVoucherOrder(voucherOrder);
                     //5,ACK 确认 SACK stream.orders g1 id
-                    stringRedisTemplate.opsForStream().acknowledge(queueName,"g1",record.getId());
+                    stringRedisTemplate.opsForStream().acknowledge(QUEUE_NAME,"g1",record.getId());
                 } catch (Exception ex) {
                     log.error("处理pending-list订单异常",e);
                     try {
@@ -132,7 +138,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                 }
             }
         }
-    });
+    }
 
 /*    //阻塞队列
     private BlockingQueue<VoucherOrder> orderTasks = new ArrayBlockingQueue<>(1024 * 1024);
@@ -195,7 +201,6 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                 Collections.emptyList(),
                 voucherId.toString(), userId.toString(), String.valueOf(orderId)
         );
-        assert result != null;
         int res = result.intValue();
         //2.判断结果是否为0
         if(res != 0){
