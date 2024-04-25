@@ -16,7 +16,7 @@ import javax.annotation.Resource;
  * 它通过注入的 {@link VoucherOrderServiceImpl} 实现了对优惠券秒杀功能的调用。
  * </p>
  *
- * @author 虎哥
+ * @author 王坤峰
  * @since 2021-12-22
  */
 @RestController
