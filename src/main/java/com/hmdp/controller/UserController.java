@@ -1,6 +1,7 @@
 package com.hmdp.controller;
 
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.hmdp.dto.LoginFormDTO;
 import com.hmdp.dto.Result;
@@ -136,4 +137,19 @@ public class UserController {
         return Result.ok("用户已更新为商户");
     }
 
+    /**
+     * 根据ID查询用户
+     * @param userId 用户ID
+     * @return 用户dto
+     */
+    @GetMapping("/{id}")
+    public Result queryById(@PathVariable("id") Long userId) {
+        // 查询详情
+        User user = userService.getById(userId);
+        if (user == null) {
+            return Result.ok();
+        }
+        UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
+        return Result.ok(userDTO);
+    }
 }
