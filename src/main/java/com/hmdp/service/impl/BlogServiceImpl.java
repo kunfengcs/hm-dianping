@@ -11,6 +11,7 @@ import com.hmdp.entity.User;
 import com.hmdp.mapper.BlogMapper;
 import com.hmdp.service.IBlogService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.hmdp.service.IFollowService;
 import com.hmdp.service.IUserService;
 import com.hmdp.utils.SystemConstants;
 import com.hmdp.utils.UserHolder;
@@ -37,6 +38,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
 
     @Resource
     private IUserService userService;
+
+    @Resource
+    private IFollowService followService;
+
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
@@ -134,6 +139,27 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 .collect(Collectors.toList());
         // 4, 返回
         return Result.ok(userDTOS);
+    }
+
+    @Override
+    public Result saveBlog(Blog blog) {
+        // 1，获取登录用户
+        UserDTO user = UserHolder.getUser();
+        blog.setUserId(user.getId());
+        //2，保存探店博文
+        boolean isSuccess = save(blog);
+        if (!isSuccess) {
+            return Result.fail("新增笔记失败");
+        }
+        // 3,feed流实现，
+        // 3,查询笔记作者的所有粉丝 select * from tb_follow where follow_user_id = ?
+        followService.query().eq("follow_user_id",user.getId()).list().forEach(follow ->{
+            // 4, 推送笔记到每一个粉丝的收件箱
+            String feedKey = "feed:" + follow.getUserId();
+            stringRedisTemplate.opsForZSet().add(feedKey,blog.getId().toString(),System.currentTimeMillis());
+        });
+        //3，返回id
+        return Result.ok(blog.getId());
     }
 
     private void queryBlogUser(Blog blog) {
