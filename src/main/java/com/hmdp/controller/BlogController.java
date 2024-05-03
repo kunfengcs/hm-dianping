@@ -74,7 +74,7 @@ public class BlogController {
     @GetMapping("/of/user")
     public Result queryBlogByUserId(
             @RequestParam(value = "id") Long id,
-            @RequestParam(value = "current" ,defaultValue = "1") Integer current) {
+            @RequestParam(value = "current", defaultValue = "1") Integer current) {
         // 根据用户查询
         Page<Blog> page = blogService.query()
                 .eq("user_id", id)
@@ -82,5 +82,19 @@ public class BlogController {
         //获取当前页数据
         List<Blog> records = page.getRecords();
         return Result.ok(records);
+    }
+
+    /**
+     * 查询用户关注人最新博客列表
+     *
+     * @param max     上一次分页查询，最后一个博客的时间戳
+     * @param offset  偏移量 来自同一时间戳导致的错误，是最后一个博客时间戳相同的数量
+     * @return 博客列表
+     */
+    @GetMapping("/of/follow")
+    public Result queryBlogOfFollow(
+            @RequestParam("lastId") Long max, @RequestParam(value = "offset", defaultValue = "0") Integer offset
+    ) {
+        return blogService.queryBlogOfFollow(max, offset);
     }
 }

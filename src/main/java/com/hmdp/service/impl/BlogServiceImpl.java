@@ -5,6 +5,7 @@ import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hmdp.dto.Result;
+import com.hmdp.dto.ScrollResult;
 import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.Blog;
 import com.hmdp.entity.User;
@@ -17,13 +18,17 @@ import com.hmdp.utils.SystemConstants;
 import com.hmdp.utils.UserHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static com.hmdp.utils.RedisConstants.FEED_KEY;
 
 /**
  * <p>
@@ -155,11 +160,71 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         // 3,查询笔记作者的所有粉丝 select * from tb_follow where follow_user_id = ?
         followService.query().eq("follow_user_id",user.getId()).list().forEach(follow ->{
             // 4, 推送笔记到每一个粉丝的收件箱
-            String feedKey = "feed:" + follow.getUserId();
+            String feedKey = FEED_KEY + follow.getUserId();
             stringRedisTemplate.opsForZSet().add(feedKey,blog.getId().toString(),System.currentTimeMillis());
         });
         //3，返回id
         return Result.ok(blog.getId());
+    }
+
+    /**
+     * 查询用户关注人最新博客列表
+     *
+     * @param max     上一次分页查询，最后一个博客的时间戳
+     * @param offset  偏移量 来自同一时间戳导致的错误，是最后一个博客时间戳相同的数量
+     * @return 博客列表
+     */
+    @Override
+    public Result queryBlogOfFollow(Long max, Integer offset) {
+        // 1, 获取当前用户
+        Long userId = UserHolder.getUser().getId();
+/*
+        Z：表示这是针对有序集合（Sorted Set）的操作。
+        REV：是reverse的缩写，意为“反向的”或“逆序的”。
+        RANGE：表示查询范围。
+        BY：用于指定接下来的参数是按照分数来筛选成员。
+        SCORE：指的是成员的分数，有序集合中每个成员都有一个分数与之关联，用于排序。
+        */
+        // 2,查询收件箱  ZREVRANGEBYSCORE key max min LIMIT offset count
+        String key = FEED_KEY + userId;
+        Set<ZSetOperations.TypedTuple<String>> typedTuples = stringRedisTemplate.opsForZSet()
+                .reverseRangeByScoreWithScores(key, 0, max, offset, 2);
+        if (typedTuples == null || typedTuples.isEmpty()) {
+            return Result.ok();
+        }
+        // 3,解析: blog,mintime(时间戳),offset
+        List<Long> ids = new ArrayList<>(typedTuples.size());
+        long minTime = 0L;
+        // 下一次查询到 offset
+        int os = 1;
+        for (ZSetOperations.TypedTuple<String> tuple : typedTuples) {
+            // 获取id
+            String id = tuple.getValue();
+            ids.add(Long.valueOf(id));
+            // 获取分数
+            long time = tuple.getScore().longValue();
+            if (minTime == time) {
+                os++;
+            } else {
+                minTime = time;
+                os = 1;
+            }
+        }
+        // 这个是防止上一次分页全部数据都是一个时间戳
+        os = minTime == max ? os + offset : os ;
+
+         // 4,根据id查询blog
+        String isStr = StrUtil.join(",", ids);
+        List<Blog> blogs = query().in("id",ids).last("ORDER BY FIELD(id,"+isStr+")").list();
+        blogs.forEach(blog -> {
+            // 5,1 查询blog有个的用户
+            queryBlogUser(blog);
+            // 5,2 查询blog 是否被点赞
+            isBlogLiked(blog);
+        });
+
+        //封装并返回
+        return Result.ok(new ScrollResult(blogs,minTime,os));
     }
 
     private void queryBlogUser(Blog blog) {
