@@ -61,7 +61,7 @@
                 <!-- 用户昵称 -->
             <div class="name">{{user.nickName}}</div>
                 <!-- 用户所在地 -->
-            <span>杭州</span>
+            <span>{{info.city}}</span>
                 <!-- 编辑资料按钮 -->
             <div class="edit-btn" @click="toEdit">
                 编辑资料
@@ -76,7 +76,7 @@
         <el-button v-if="user.isShop === 1"><a href="/voucher-add.html">添加优惠劵</a></el-button>
         <!-- 个人简介区域 -->
     <div class="introduce">
-        <span v-if="info.introduce"></span>
+        <span v-if="info.introduce">{{info.introduce}}</span>
         <span v-else>添加个人简介，让大家更好的认识你 <i class="el-icon-edit"></i></span>
     </div>
         <!-- 内容区域 -->
@@ -165,21 +165,75 @@
             },
                 count: 5, // 初始加载数量
                 isReachBottom: false, // 是否到达底部
+            current: 1,  // 添加当前页数属性
+            totalPages:0,
+            commonFollows: [], // 谁关注我
+            YoursFollows:[]  //你关注谁
         },
         created() {
                 // 初始化页面，获取用户信息
             this.queryUser();
         },
         methods: {
+            del(id) {
+                axios.delete("/blog/del/" + id).then(res => {
+                    console.log("shanchu" + id)
+
+                    this.$message.success("删除成功")
+
+                }).catch(err => {
+                    this.$message.error("删除失败")
+                })
+
+            },
+            toOtherInfo(id){
+                location.href = "/other-info.html?id=" + id
+            },
+            queryYoursFollow() {
+                axios.get("/follow/yours/" + this.user.id)
+                    .then(({data}) => this.YoursFollows = data)
+                    .catch(err => {
+                        this.$message.error(err);
+                    })
+            },
+            queryCommonFollow() {
+                axios.get("/follow/mine/" + this.user.id)
+                    .then(({data}) => this.commonFollows = data)
+                    .catch(err => {
+                        this.$message.error(err);
+                    })
+            },
                 // 加载更多笔记
             load() {
                 this.count += 2;
             },
+            toBlogDetail(b) {
+                location.href = "/blog-detail.html?id=" + b.id;
+            },
                 // 查询用户自己的笔记
-            queryBlogs() {
-                axios.get("/blog/of/me")
-                    .then(({data}) => this.blogs = data)
-                    .catch(this.$message.error)
+            // queryBlogs() {
+            //     axios.get("/blog/of/me")
+            //         .then(({data}) => this.blogs = data)
+            //         .catch(this.$message.error)
+            // },
+// TODO 分页查看笔记
+            queryBlogs(current) {
+
+                axios.get("/blog/of/me?current="+current)
+                    .then(({data}) => {
+                            console.log(data.totalPage)
+                            // 提取最大总页数
+                            this.totalPages = data.totalPage;
+                            // 提取当前页数据
+
+                            const records = data.records;
+                            records.forEach(b => (b.img = b.images.split(",")[0]));
+                            this.blogs = this.blogs.concat(records);
+                            this.scrollEnd = false; // Reset scrollEnd flag
+
+                        }
+                    )
+                    .catch(this.$message.error);
             },
                 // 查询关注的人的笔记
             queryBlogsOfFollow(clear) {
@@ -212,6 +266,10 @@
                         this.queryUserInfo();
                         // 查询用户笔记
                         this.queryBlogs();
+                        this.queryBlogs(this.current);
+                        console.log("user:"+data.id)
+                        localStorage.setItem("userId", JSON.stringify(data.id))
+
                     })
                     .catch(err => {
                             // 如果没有登录，跳转至登录页面
@@ -233,6 +291,8 @@
                         this.info = data;
                         // 保存到本地
                         sessionStorage.setItem("userInfo", JSON.stringify(data))
+                        localStorage.setItem("userId", JSON.stringify(this.user.id))
+                        console.log("ij"+this.user.id)
                     })
                     .catch(err => {
                             // 查询失败，提示错误
@@ -255,10 +315,21 @@
                     .catch(this.$message.error)
             },
                 // 点击选项卡事件处理
+            // handleClick(r) {
+            //     if (r.name === '4') {
+            //             // 如果点击的是关注选项卡，查询关注的人的笔记
+            //         this.queryBlogsOfFollow(true);
+            //     }
+            // },
             handleClick(r) {
-                if (r.name === '4') {
-                        // 如果点击的是关注选项卡，查询关注的人的笔记
+                if (r.name === '1') { // 点击笔记选项卡
+                    // this.queryBlogs(this.current); // 调用queryBlogs方法
+                } else if (r.name === '4') {
                     this.queryBlogsOfFollow(true);
+                }else if(r.name==='3'){
+                    this.queryCommonFollow()
+                }else if(r.name==='2'){
+                    this.queryYoursFollow()
                 }
             },
                 // 点赞操作
@@ -273,6 +344,26 @@
                         this.$message.error(err)
                     })
             },
+// TODO
+            // addLike(b) {
+            //     const current = this.current;
+            //     axios.put("/blog/like/" + b.id)
+            //         .then(({data}) => {
+            //             axios.get("/blog/cache", {params: {current: current}}).then(({data}) => {
+            //
+            //                 console.log("删除缓存成功")
+            //             })
+            //             axios.get("/blog/" + b.id)
+            //                 .then(({data}) => {
+            //                     this.queryBlogById(b);
+            //                 })
+            //                 .catch(this.$message.error)
+            //         })
+            //         .catch(err => {
+            //             this.$message.error(err)
+            //         })
+            // },
+
                 // 根据博客 ID 查询博客信息
             queryBlogById(b) {
                 axios.get("/blog/" + b.id)
@@ -288,18 +379,36 @@
                     })
             },
                 // 滚动事件处理
+            // onScroll(e) {
+            //     let scrollTop = e.target.scrollTop;
+            //     let offsetHeight = e.target.offsetHeight;
+            //     let scrollHeight = e.target.scrollHeight;
+            //     if (scrollTop === 0) {
+            //         // 到顶部了，查询一次
+            //         this.queryBlogsOfFollow(true);
+            //     } else if (scrollTop + offsetHeight + 1 > scrollHeight && !this.isReachBottom) {
+            //         this.isReachBottom = true
+            //         // 再次查询下一页数据
+            //         this.queryBlogsOfFollow();
+            //     } else {
+            //         this.isReachBottom = false
+            //     }
+            // },
             onScroll(e) {
                 let scrollTop = e.target.scrollTop;
                 let offsetHeight = e.target.offsetHeight;
                 let scrollHeight = e.target.scrollHeight;
-                if (scrollTop === 0) {
-                    // 到顶部了，查询一次
-                    this.queryBlogsOfFollow(true);
-                } else if (scrollTop + offsetHeight + 1 > scrollHeight && !this.isReachBottom) {
+                if(scrollTop + offsetHeight + 1 > scrollHeight && !this.isReachBottom){
                     this.isReachBottom = true
-                    // 再次查询下一页数据
-                    this.queryBlogsOfFollow();
-                } else {
+                    console.log("触底")
+
+
+                    this.current++
+                    console.log("current"+this.current)
+                    if(this.current<=this.totalPages) {
+                        this.queryBlogs(this.current)
+                    }
+                }else{
                     this.isReachBottom = false
                 }
             },

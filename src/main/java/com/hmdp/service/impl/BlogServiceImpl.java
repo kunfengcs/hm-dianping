@@ -3,6 +3,7 @@ package com.hmdp.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hmdp.dto.Result;
 import com.hmdp.dto.ScrollResult;
@@ -22,10 +23,7 @@ import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.hmdp.utils.RedisConstants.FEED_KEY;
@@ -134,6 +132,12 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         Set<String> top5 = stringRedisTemplate.opsForZSet().range(key, 0, 4);
         // 2, 解析出用户id,从 string 到 long
         List<Long> ids = top5.stream().map(Long::valueOf).collect(Collectors.toList());
+
+        // 检查ids是否为空，如果为空则直接返回空列表
+        if (CollectionUtils.isEmpty(ids)) {
+            return Result.ok(Collections.emptyList());
+        }
+
         String isStr = StrUtil.join(",", ids);
         // 3, 根据用户id查出用户 where id in (5,4,3,2,1) order by field(id,5,4,3,2,1)
         List<UserDTO> userDTOS = userService.query()

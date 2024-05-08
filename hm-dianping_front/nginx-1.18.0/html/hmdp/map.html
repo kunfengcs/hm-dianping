@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+  <title>大众点评</title>
+  <!-- 引入样式 -->
+  <link rel="stylesheet" href="./css/element.css">
+  <link href="./css/index.css" rel="stylesheet">
+  <link href="./css/main.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
+  <link rel="stylesheet" href="./css/indexlvyou.css" />
+  <link rel="stylesheet" href="./css/banner.css" />
+
+  <style type="text/css">
+    .el-input__inner {
+      border-radius: 20px;
+    }
+  </style>
+</head>
+
+<body>
+<div id="app">
+  <div :class='{"map-box": true, "fixed-map": isFixed}' :style="{left: ml + 'px'}">
+    <div class="map-head">地图预览</div>
+    <div class="amap" id="mapContainer"></div>
+    <div class="map-geo" @click="getGeoLoc">
+      <img src="https://a.amap.com/jsapi/static/image/plugin/waite.png" v-show="loading">
+    </div>
+  </div>
+
+  <foot-bar :active-btn="2"></foot-bar>
+</div>
+
+<!-- Include required JavaScript files -->
+<script src="./js/vue.js"></script>
+<script src="./js/axios.min.js"></script>
+<!-- 引入组件库 -->
+<script src="./js/element.js"></script>
+<script src="./js/common.js"></script>
+<script src="./js/footer.js"></script>
+<script src="./js/amap.min.js"></script>
+<script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=ddd292c88aa1bad9c04891a47724f40a"></script>
+
+<script>
+  let app = new Vue({
+    el: "#app",
+    data: {
+      ml: 0,                   // 控制地图位置
+      loading: false,          // 是否在定位
+      isFixed: false,          // 是否固定地图
+      map: null,               // 地图对象
+      geolocation: null,       // 定位系统
+      shops: [],               // 商铺数据
+      loc: "",                 // 用户位置经纬度
+      params: {
+        key: "",               // 搜索关键字
+        sortBy: "",            // 排序字段
+        location: "",          // 位置信息
+      },
+      shopCoordinates: {
+        x: 0,
+        y: 0
+      }
+    },
+    created() {
+      // 页面加载时，先搜索一下
+      this.search();
+    },
+    mounted() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const x = urlParams.get("x");
+      const y = urlParams.get("y");
+      if (x && y) {
+        this.shopCoordinates.x = parseFloat(x);
+        this.shopCoordinates.y = parseFloat(y);
+        this.addMarker(
+                "//a.amap.com/jsapi/static/image/plugin/point.png",
+                parseFloat(x),
+                parseFloat(y)
+        );
+      }
+
+      // 初始化地图
+      this.initMap();
+
+      // 初始化定位系统
+      this.initGeolocation();
+    },
+    methods: {
+      getGeoLoc() {
+        this.getCurrentPosition();
+      },
+      initMap() {
+        this.map = new AMap.Map('mapContainer', {
+          zoom: 13,
+          center: [this.shopCoordinates.x, this.shopCoordinates.y]
+        });
+
+        // 调用 addMarker 方法添加商铺标记
+        this.addMarker('//a.amap.com/jsapi/static/image/plugin/point.png', this.shopCoordinates.x, this.shopCoordinates.y);
+      },
+      initGeolocation() {
+        AMap.plugin("AMap.Geolocation", () => {
+          this.geolocation = new AMap.Geolocation({
+            enableHighAccuracy: true,         // 是否使用高精度定位，默认:true
+            timeout: 10000,                   // 超过10秒后停止定位，默认：无穷大
+            zoomToAccuracy: true,             // 定位成功后是否自动调整地图视野到定位点
+            buttonPosition: "RB",             // 定位按钮的停靠位置
+            buttonOffset: new AMap.Pixel(10, 20), // 定位按钮与设置的停靠位置的偏移量
+          });
+
+          // 使用定位按钮
+          this.map.addControl(this.geolocation);
+
+          // 获取当前位置信息
+          this.getCurrentPosition();
+        });
+      },
+      getCurrentPosition() {
+        this.loading = true;
+        this.geolocation.getCurrentPosition((status, result) => {
+          this.loading = false;
+          if (status === "complete") {
+            if (this.params.location) {
+              const [x, y] = this.params.location.split(",");
+              this.addMarker(
+                      "//a.amap.com/jsapi/static/image/plugin/point.png",
+                      parseFloat(x),
+                      parseFloat(y)
+              );
+            } else {
+              this.addMarker(
+                      "//a.amap.com/jsapi/static/image/plugin/point.png",
+                      result.position.lng,
+                      result.position.lat
+              );
+            }
+          }
+        });
+      },
+      addMarker(icon, x, y) {
+        const marker = new AMap.Marker({
+          map: this.map,
+          icon: icon,
+          position: [x, y]
+        });
+      },
+      search() {
+        // 搜索逻辑
+        // ...
+      },
+    },
+  });
+</script>
+</body>
+
+</html>

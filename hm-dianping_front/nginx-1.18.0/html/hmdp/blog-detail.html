@@ -88,53 +88,77 @@
             </div>
         </div>
         <div class="blog-divider"></div>
+
+
+        <!--      评论列表-->
         <div class="blog-comments">
-            <div class="comments-head">
-                <div>网友评价 <span>（119）</span></div>
+            <div class="comments-head">-->
+                <div>网友评价 <span>{{this.blog.comments}}</span></div>
                 <div><i class="el-icon-arrow-right"></i></div>
             </div>
             <div class="comment-list">
-                <div class="comment-box" v-for="i in 3" :key="i">
-                    <div class="comment-icon">
-                        <img
-                                src="https://p0.meituan.net/userheadpicbackend/57e44d6eba01aad0d8d711788f30a126549507.jpg%4048w_48h_1e_1c_1l%7Cwatermark%3D0"
-                                alt="">
-                    </div>
+                <div class="comment-box" v-for="item in comments" :key="item.id"
+                     style="border-bottom: 1px solid #ccc; padding: 0px 0; ">
                     <div class="comment-info">
-                        <div class="comment-user">叶小乙 <span>Lv5</span></div>
-                        <div style="display: flex;">
-                            打分
-                            <el-rate disabled v-model="4.5"></el-rate>
+                        <div class="comment-user">
+                            <el-image :src="item.icon" style="width: 50px; height: 50px; border-radius: 50%"></el-image>
+                            <span>{{ item.nickName }}：</span>
                         </div>
-                        <div style="padding: 5px 0; font-size: 14px">
-                            某平台上买的券，价格可以当工作餐吃，虽然价格便宜，但是这家店一点都没有...
+                        <div style="float: right">
+                            <i class="el-icon-time"></i>
+                            {{item.createTime}}
                         </div>
-                        <div class="comment-images">
-                            <img
-                                    src="https://qcloud.dpfile.com/pc/6T7MfXzx7USPIkSy7jzm40qZSmlHUF2jd-FZUL6WpjE9byagjLlrseWxnl1LcbuSGybIjx5eX6WNgCPvcASYAw.jpg"
-                                    alt="">
-                            <img
-                                    src="https://qcloud.dpfile.com/pc/sZ5q-zgglv4VXEWU71xCFjnLM_jUHq-ylq0GKivtrz3JksWQ1f7oBWZsxm1DWgcaGybIjx5eX6WNgCPvcASYAw.jpg"
-                                    alt="">
-                            <img
-                                    src="https://qcloud.dpfile.com/pc/xZy6W4NwuRFchlOi43DVLPFsx7KWWvPqifE1JTe_jreqdsBYA9CFkeSm2ZlF0OVmGybIjx5eX6WNgCPvcASYAw.jpg"
-                                    alt="">
-                            <img
-                                    src="https://qcloud.dpfile.com/pc/xZy6W4NwuRFchlOi43DVLPFsx7KWWvPqifE1JTe_jreqdsBYA9CFkeSm2ZlF0OVmGybIjx5eX6WNgCPvcASYAw.jpg"
-                                    alt="">
                         </div>
                         <div>
-                            浏览641 &nbsp;&nbsp;&nbsp;&nbsp;评论5
+                        <div style="padding: 15px 10px 10px 10px; font-size: 14px">
+                            <span>{{ item.content }}</span>
+                        </div>   <!--  内容-->
+                        <div style="text-align: right">
+
+                            <el-button style="margin-left: 5px" type="text" @click="handleReply(item.id)">回复
+                            </el-button>
+                            <el-button type="text" style="color: red" @click="del(item.id)"
+                                       v-if="curUserId === item.userId">删除
+                            </el-button>
                         </div>
                     </div>
+
+
+                    <div v-if="item.children.length" style="padding-left: 50px;">
+                        <div v-for="subItem in item.children" :key="subItem.id"
+                             style="background-color: #f0f0f0; padding: 5px 20px">
+                            <!--          回复列表-->
+                            <div style="font-size: 14px; padding: 5px 0; line-height: 25px">
+                                <div>
+                                    <b style="color: #3a8ee6" v-if="subItem.pnickName">@{{ subItem.pnickName }}</b>
                 </div>
-                <div
-                        style="display: flex; justify-content: space-between;padding: 15px 0; border-top: 1px solid #f1f1f1; margin-top: 10px;">
-                    <div>查看全部119条评价</div>
-                    <div><i class="el-icon-arrow-right"></i></div>
+                                <div style="padding-left: 5px">
+                                    <b>{{ subItem.nickName }}：</b>
+                                    <span>{{ subItem.content }}</span>
+                </div>
+
+                                <div style="display: flex; line-height: 20px; margin-top: 5px; padding-left: 5px">
+                                    <div style="width: 200px;">
+                                        <i class="el-icon-time"></i><span style="margin-left: 5px">{{ subItem.createTime
+                                        }}</span>
+            </div>
+                                    <div style="text-align: right">
+                                        <el-button style="margin-left: 5px" type="text"
+                                                   @click="handleReply(subItem.id)">回复
+                                        </el-button>
+                                        <el-button type="text" style="color: red" @click="del(subItem.id)"
+                                                   v-if="curUserId === subItem.userId">删除
+                                        </el-button>
+        </div>
+                                </div>
+                            </div>   <!--  内容-->
+                        </div>
+
+                    </div>
                 </div>
             </div>
         </div>
+
         <div class="blog-divider"></div>
     </div>
     <div class="foot">
@@ -150,9 +174,22 @@
         </div>
         <div style="width: 40%">
         </div>
+        <!--从这里开始新增-->
         <div class="foot-box">
-            <div class="foot-view"><i class="el-icon-chat-square"></i></div>
+            <div class="foot-view" @click="handleReply()"><i class="el-icon-chat-square"></i></div>
         </div>
+        <!--    <el-button style="margin-left: 5px" type="text" @click="handleReply(item.id)">回复</el-button>-->
+        <el-dialog title="评论" :visible.sync="dialogFormVisible" width="80%">
+            <el-form label-width="80px" size="small">
+                <el-form-item label="内容">
+                    <el-input type="textarea" v-model="commentForm.content" autocomplete="off"></el-input>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="dialogFormVisible = false" size="small">取 消</el-button>
+                <el-button type="primary" @click="save" size="small">确 定</el-button>
+            </div>
+        </el-dialog>
     </div>
 </div>
 <script src="./js/vue.js"></script>
@@ -173,7 +210,7 @@
             blog: {},
             shop: {},
             likes: [],
-            user: {}, // 登录用户
+            user: "", // 登录用户
             followed: false, // 是否关注了
             _width: 0,
             duration: 300,
@@ -189,11 +226,22 @@
                 y: 0
             },
             sensitivity: 60,
-            resistance: 0.3
+            resistance: 0.3,
+
+            curUserId: localStorage.getItem("userId") ? JSON.parse(localStorage.getItem("userId")) : {},
+            commentForm: {},
+            dialogFormVisible: false,
+            comments: [],
+            answerId: null
         },
         created() {
             let id = util.getUrlParam("id");
             this.queryBlogById(id);
+
+            this.loadComment(id);
+            // this.queryLoginUser();
+            console.log("id"+id)
+            console.log("curUserIderererer"+this.curUserId)
         },
         methods: {
             init() {
@@ -205,6 +253,57 @@
                 this.setTransform()
                 this.setTransition('none')
             },
+
+            ////新增
+            handleReply(aid) {
+                console.log("aid" + aid)
+                this.commentForm = {parentId: aid, answerId: aid}
+                this.dialogFormVisible = true
+            },
+            async save() {
+                console.log("成功")
+                if (!this.user.id) {
+                    this.$message.warning("请登录后操作")
+                    return
+                }
+                this.commentForm.blogId = this.blog.id
+                if (this.commentForm.contentReply) {  //如果有值的话，因为后台接收的是content
+                    this.commentForm.content = this.commentForm.contentReply
+                }
+                await axios.post("/comment", this.commentForm).then(
+                    this.$message.success("评论成功"),
+                    this.commentForm = {}, // 初始化评论对象内容
+
+                    this.dialogFormVisible = false,
+                    this.loadComment(this.blog.id),
+                    console.log("成功到这里")
+                ).catch(
+                    this.$message.error
+                )
+
+            },
+            del(id) {
+                axios.delete("/comment/" + id).then(res => {
+                    console.log("shanchu" + id)
+                    this.$message.success("删除成功")
+                    this.loadComment(this.blog.id)
+                }).catch(err => {
+                    this.$message.error("删除失败")
+                })
+
+            },
+
+
+            async loadComment(id) {
+                console.log("111" + id);
+                try {
+                    const res = await axios.get("/comment/tree/" + id);
+                    this.comments = res.data;
+                } catch (error) {
+                    this.$message.error("加载评论失败");
+                }
+            },
+            /////////////////////////////////////////////////////////////区分
             goBack() {
                 history.back();
             },
@@ -216,6 +315,7 @@
                 }
             },
             queryBlogById(id) {
+                console.log("queryBlogById"+id)
                 axios.get("/blog/" + id)
                     .then(({data}) => {
                         data.images = data.images.split(",")
@@ -282,8 +382,13 @@
                         // 保存用户
                         this.user = data;
                         if (this.user.id !== this.blog.userId) {
+                            console.log("queryLoginUser"+this.user.id+"_"+this.blog.userId)
+                            this.curUserId = this.user.id
+
                             this.isFollowed();
                         }
+                        // this.curUserId = JSON.parse(sessionStorage.getItem("userId")) ? JSON.parse(sessionStorage.getItem("userId")) : "";
+                        console.log("cur"+this.curUserId)
                     })
                     .catch(console.log)
             },

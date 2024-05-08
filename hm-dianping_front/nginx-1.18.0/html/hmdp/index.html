@@ -22,9 +22,21 @@
     <div class="search-bar">
         <div class="city-btn">朔州 <i class="el-icon-arrow-down"></i></div>
         <div class="search-input">
-            <el-input size="mini" placeholder="请输入商户名、地点">
-                <i slot="prefix" class="el-input__icon el-icon-search"></i>
-            </el-input>
+        <div class="search-input">
+          <div class="input-box">
+            <input title="输入关键字搜索酒店" v-model="params.key" type="text" @click.stop="" @focus="showOps=true"
+                   @keyup="handleKeyUp">
+
+          </div>
+          <div id="complete-box" v-show="showOps && autoCompleteOptions.length > 0">
+            <div v-for="(item, i) in autoCompleteOptions" :key="i" :value="item" :label="item" @mouseover="opsIndex = i"
+                 :style='{"background-color": opsIndex === i ? "#EEE" : "#fff"}' @click="goToDetail(item)">
+              {{ item }}
+            </div>
+          </div>
+        </div>
+      </div>
+
         </div>
         <div class="header-icon" @click="toPage(4)"><i class="el-icon-user"></i></div>
     </div>
@@ -60,6 +72,8 @@
 <script src="./js/element.js"></script>
 <script src="./js/common.js"></script>
 <script src="./js/footer.js"></script>
+<!--引入Vue Router.js-->
+<script src="https://unpkg.com/vue-router@3.5.2/dist/vue-router.js"></script>
 <script>
 
     const app = new Vue({
@@ -69,40 +83,77 @@
             types: [], // 类型列表
             blogs: [], // 播客列表
             current: 1,// blog的页码
+      scrollEnd: false,  // 是否已滚动到页面底部
+      totalPages: 0, // 最大总页数
+      info: sessionStorage.getItem("userInfo") ? JSON.parse(sessionStorage.getItem("userInfo")) : "广州",
+      params: {
+        key: "", // 搜索关键字
+      },
+      ops: [],
+      showOps: false,
+      opsIndex: -1,
+      isFixed: false,
+      autoCompleteOptions: [],
+      selectedOption: "",
+      showOps: false,
+      shop:""
+
         },
         created() {
             // 查询类型
             this.queryTypes();
             this.queryHotBlogsScroll();
+      // this.queryUserInfo();
+      window.addEventListener('scroll', this.handleScroll);
         },
         methods: {
+      goToDetail(item) {
+        // 在这里使用Vue Router进行跳转到详情页
+        axios.get("/shop/check/"+item)
+                .then(({ data }) => {
+                  this.shop = data;
+                  console.log(this.shop.id)
+                  location.href ='/shop-detail.html?id=' + this.shop.id;
+                })
+                .catch(err => {
+                  this.$message.error(err);
+                });
+
+      },
+
             queryTypes() {
                 axios.get("/shop-type/list")
                     .then(({data}) => {
                         this.types = data;
+                  console.log(data+"wr")
                     })
                     .catch(err => {
-                        this.$message.error(err)
-                    })
+                  this.$message.error(err);
+                });
             },
             queryHotBlogsScroll() {
                 axios.get("/blog/hot?current=" + this.current)
                     .then(({data}) => {
-                        data.forEach(b => b.img = b.images.split(",")[0]);
-                        this.blogs = this.blogs.concat(data);
+                  // 提取最大总页数
+                  this.totalPages = data.totalPage;
+                  // 提取当前页数据
+                  const records = data.records;
+                  records.forEach(b => (b.img = b.images.split(",")[0]));
+                  this.blogs = this.blogs.concat(records);
+                  this.scrollEnd = false; // Reset scrollEnd flag
                     })
                     .catch(err => {
-                        this.$message.error(err)
-                    })
+                  this.$message.error(err);
+                });
             },
             addLike(b) {
                 axios.put("/blog/like/" + b.id)
                     .then(({data}) => {
-                        this.queryBlogById(b)
+                  this.queryBlogById(b);
                     })
                     .catch(err => {
-                        this.$message.error(err)
-                    })
+                  this.$message.error(err);
+                });
             },
             queryBlogById(b) {
                 axios.get("/blog/" + b.id)
@@ -111,32 +162,55 @@
                         b.isLike = data.isLike;
                     })
                     .catch(() => {
-                        this.$message.error
+                  this.$message.error("Failed to query blog!");
                         b.liked++;
-                    })
+                });
             },
             onScroll(e) {
                 let scrollTop = e.target.scrollTop;
                 let offsetHeight = e.target.offsetHeight;
                 let scrollHeight = e.target.scrollHeight;
-                if (scrollTop + offsetHeight > scrollHeight && !this.isReachBottom) {
+        if(scrollTop + offsetHeight + 1 > scrollHeight && !this.isReachBottom){
                     this.isReachBottom = true
-
-                    // 再次查询下一页数据
-                    this.current++;
-                    this.queryHotBlogsScroll();
+          console.log("触底")
+          this.current++
+          this.queryHotBlogsScroll(this.current)
                 } else {
                     this.isReachBottom = false
                 }
             },
             toShopList(id, name) {
-                location.href = "/shop-list.html?type=" + id + "&name=" + name
+        location.href = "/shop-list.html?type=" + id + "&name=" + name;
             },
             toBlogDetail(b) {
                 location.href = "/blog-detail.html?id=" + b.id
+            },
+            handleKeyUp() {
+                this.getSuggestion();
+            },
+            getSuggestion() {
+                if (!this.params.key) {
+                    this.autoCompleteOptions = [];
+                    return;
+                }
+                axios.get("/map/suggestion", {
+                    params: {
+                        key: this.params.key
+                    }
+                })
+                    .then(response => {
+                        console.log(response.data); // 打印后端返回的数据
+                        this.autoCompleteOptions = response.data;
+                    })
+                    .catch(error => {
+                        console.log(response.data);
+                    });
+            },
+            handleOptionSelect() {
+                this.params.key = this.selectedOption;
             }
         }
-    })
+    });
 </script>
 </body>
 </html>

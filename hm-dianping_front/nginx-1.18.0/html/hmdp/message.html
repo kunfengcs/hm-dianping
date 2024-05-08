@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <title>大众点评</title>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="./css/element.css">
+    <link href="./css/main.css" rel="stylesheet">
+    <link href="./css/info.css" rel="stylesheet">
+
+    <style type="text/css">
+        .el-tabs--bottom .el-tabs__item.is-bottom:nth-child(2), .el-tabs--bottom .el-tabs__item.is-top:nth-child(2), .el-tabs--top .el-tabs__item.is-bottom:nth-child(2), .el-tabs--top .el-tabs__item.is-top:nth-child(2) {
+            padding-left: 15px;
+        }
+
+        .el-tabs, .el-tab-pane {
+            height: 100%;
+        }
+
+        .el-tabs__header {
+            height: 5%;
+        }
+
+        .el-tabs__content {
+            height: 88%;
+        }
+
+        .scrollable-pane {
+            overflow-y: auto;
+        }
+
+        .scrollable-content {
+            max-height: 550px; /* Adjust the maximum height as needed */
+        }
+
+        .content {
+            padding: 5px 5px 55px 5px; /* 修改padding-bottom值为foot-bar的高度加上内容上下边距的和 */
+        }
+
+        .scrollable-pane {
+            overflow-y: auto;
+        }
+
+    </style>
+</head>
+
+<body>
+<div id="app">
+    <div class="header">
+        <div class="header-back-btn" @click="goBack">
+            <i class="el-icon-arrow-left"></i>
+        </div>
+        <div class="header-title">消息列表&nbsp;&nbsp;&nbsp;</div>
+    </div>
+    <div class="content">
+<!--        <div label="笔记" name="1" class="scrollable-pane" ref="scrollablePane" @scroll="handleScroll">-->
+        <div label="笔记" name="1" class="scrollable-pane"  @scroll="onScroll">
+            <div class="scrollable-content" v-if="blogs.length > 0">
+<!--                <div v-for="b in blogs" :key="b.id" class="blog-item">-->
+                    <div v-for="(b, index) in blogs" :key="index" class="blog-item">
+                    <div class="blog-img">
+                        <img :src="b.images.split(',')[0]" alt="" @click="toBlogDetail(b)">
+                    </div>
+                    <div class="blog-info">
+                        <div class="blog-title">{{b.title}}</div>
+                        <div class="blog-liked" style="float: right"></div>
+                        <div class="blog-comments" style="float: right">
+                            <i class="el-icon-chat-dot-round" style="font-size: 10px">
+                                您有新的未读信息
+                            </i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="scrollable-content" v-else>
+                没有新的评论信息
+            </div>
+        </div>
+    </div>
+    <foot-bar :active-btn="3"></foot-bar>
+</div>
+
+<script src="./js/vue.js"></script>
+<script src="./js/axios.min.js"></script>
+<!-- 引入组件库 -->
+<script src="./js/element.js"></script>
+<script src="./js/common.js"></script>
+<script src="./js/footer.js"></script>
+<script>
+    const app = new Vue({
+        el: "#app",
+        data: {
+            user: "",
+            activeName: "1",
+            info: {},
+            blogs: [],
+            params: {
+                minTime: 0, // 上一次拉取到的时间戳
+                offset: 0, // 偏移量
+            },
+            count: 5,
+            isReachBottom: false,
+            current: 1, // 添加当前页数属性
+            totalPages: 0,
+            commonFollows: [], // 谁关注我
+            YoursFollows: [], //你关注谁
+        },
+        created() {
+            this.queryUser();
+            this.queryBlogs();
+            // this.handleScroll(); // 初始化时进行一次滚动检查
+        },
+        methods: {
+            toOtherInfo(id) {
+                location.href = "/other-info.html?id=" + id;
+            },
+            load() {
+                this.count += 2;
+            },
+            toBlogDetail(b) {
+                // 跳转到博客详情页
+                console.log("跳转成功");
+                location.href = "/blog-detail.html?id=" + b.id;
+
+                // 调用后端接口，将博客从消息列表中删除
+                axios.post("/blog/removeId?blogId=" + b.id)
+                    .then(() => {
+                        // 从blogs数组中删除该博客
+                        const index = this.blogs.findIndex((item) => item.id === b.id);
+                        if (index !== -1) {
+                            this.blogs.splice(index, 1);
+                        }
+                    })
+                    .catch(this.$message.error);
+            },
+
+            queryBlogs() {
+                axios.post("/blog/queryMe/read?current=" + this.current)
+                    .then(({ data }) => {
+                        // this.blogs = []; // 清空数组
+                        // 保存新数据
+                        // this.blogs = this.blogs.concat(data.records);
+                        // 提取最大总页数
+                        this.totalPages = data.totalPage;
+                        // 提取当前页数据
+                        const records = data.records;
+                        records.forEach(b => (b.img = b.images.split(",")[0]));
+                        this.blogs = this.blogs.concat(records);
+                        this.scrollEnd = false; // Reset scrollEnd flag
+                    })
+                    .catch(this.$message.error);
+            },
+            queryUser() {
+                // 查询用户信息
+                axios
+                    .get("/user/me")
+                    .then(({ data }) => {
+                        // 保存用户
+                        this.user = data;
+                        // 查询用户详情
+                        this.queryUserInfo();
+                        // 查询用户笔记
+                        // this.queryBlogs(this.current);
+                    })
+                    .catch((err) => {
+                        location.href = "login.html";
+                    });
+            },
+            goBack() {
+                history.back();
+            },
+            queryUserInfo() {
+                axios
+                    .get("/user/info/" + this.user.id)
+                    .then(({ data }) => {
+                        if (!data) {
+                            return;
+                        }
+                        // 保存用户详情
+                        this.info = data;
+                        // 保存到本地
+                        sessionStorage.setItem("userInfo", JSON.stringify(data));
+                        sessionStorage.setItem("userId", JSON.stringify(data.id));
+                    })
+                    .catch((err) => {
+                        this.$message.error(err);
+                    });
+            },
+            toEdit() {
+                location.href = "info-edit.html";
+            },
+
+            queryBlogById(b) {
+                axios
+                    .get("/blog/" + b.id)
+                    .then(({ data }) => {
+                        b.liked = data.liked;
+                        b.isLike = data.isLike;
+                    })
+                    .catch(() => {
+                        this.$message.error;
+                        b.liked++;
+                    });
+            },
+
+            // handleScroll() {
+            //     const scrollablePane = this.$refs.scrollablePane;
+            //     if (scrollablePane) {
+            //         const scrollTop = scrollablePane.scrollTop;
+            //         const offsetHeight = scrollablePane.offsetHeight;
+            //         const scrollHeight = scrollablePane.scrollHeight;
+            //         if (scrollTop + offsetHeight + 1 > scrollHeight && !this.isReachBottom) {
+            //             this.isReachBottom = true;
+            //             console.log("触底");
+            //             this.current++;
+            //             if (this.current <= this.totalPages) {
+            //                 this.queryBlogs(this.current);
+            //             }
+            //         } else {
+            //             this.isReachBottom = false;
+            //         }
+            //     }
+            // }
+            onScroll(e) {
+                let scrollTop = e.target.scrollTop;
+                let offsetHeight = e.target.offsetHeight;
+                let scrollHeight = e.target.scrollHeight;
+                if(scrollTop + offsetHeight + 1 > scrollHeight && !this.isReachBottom){
+                    this.isReachBottom = true
+                    console.log("触底")
+                    this.current++
+                    this.queryBlogs(this.current)
+                }else{
+                    this.isReachBottom = false
+                }
+            },
+        },
+    });
+</script>
+</body>
+
+</html>

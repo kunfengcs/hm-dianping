@@ -37,7 +37,7 @@
                 </el-dropdown-menu>
             </el-dropdown>
         </div>
-        <div class="sort-item" @click="sortAndQuery('')">
+    <div class="sort-item" @click="sortAndQuery('distance')">
             距离 <i class="el-icon-arrow-down el-icon--right"></i>
         </div>
         <div class="sort-item" @click="sortAndQuery('comments')">
@@ -91,10 +91,12 @@
             params: {
                 typeId: 0,
                 current: 1,
-                sortBy: "",
-                x: 120.149993, // 经度
-                y: 30.334229 // 纬度
-            }
+        x: null,
+        y:null,
+        sortBy: "", // 当前排序方式，默认为按距离排序
+      },
+
+
         },
         created() {
             // 获取参数
@@ -103,7 +105,8 @@
             // 查询类型
             this.queryTypes();
             // 查询商店
-            this.queryShops();
+      // this.queryShops();
+      this.sortAndQuery(this.sortBy);
         },
         methods: {
             queryTypes() {
@@ -117,15 +120,18 @@
                     })
             },
             queryShops() {
+        this.params.current=1;
                 axios.get("/shop/of/type", {
                     params: this.params
                 })
                     .then(({data}) => {
                         if (!data) {
                             return
+                    console.log(data)
                         }
                         data.forEach(s => s.images = s.images.split(',')[0]);
                         this.shops = this.shops.concat(data);
+                  console.log(data)
                     })
                     .catch(err => {
                         console.log(err);
@@ -135,9 +141,41 @@
             handleCommand(t) {
                 location.href = "/shop-list.html?type=" + t.id + "&name=" + t.name;
             },
+      // sortAndQuery(sortBy) {
+      //   if(sortBy==='distance'){
+      //     // 如果没有typeId参数，则需要获取当前位置坐标并显示所有商店
+      //     navigator.geolocation.getCurrentPosition((position) => {
+      //       this.params.x = position.coords.longitude;
+      //       this.params.y = position.coords.latitude;
+      //   })
+      //   }else {
+      //     this.params.sortBy = sortBy;
+      //   }
+      //   this.queryShops();
+      // },
             sortAndQuery(sortBy) {
+        this.shops = [];
+      this.params.current=1;
+        if (sortBy === 'distance') {
+          // 如果排序方式为距离，则获取当前用户地址的经度和纬度
+          this.shops = [];
+          this.params.sortBy="";
+          // this.params.x = this.x;
+          // this.params.y = this.y;
+          navigator.geolocation.getCurrentPosition((position) => {
+            this.params.x = position.coords.longitude;
+            this.params.y = position.coords.latitude;
+            // 调用queryShops方法查询商店
+            this.queryShops();
+          });
+        } else {
+          this.shops = [];
+          this.params.x = null;
+          this.params.y = null;
+          this.params.current=1;
                 this.params.sortBy = sortBy;
                 this.queryShops();
+        }
             },
             goBack() {
                 history.back();
@@ -153,7 +191,11 @@
                     this.isReachBottom = true
                     console.log("触底")
                     this.params.current++
+          console.log("current"+this.current)
+          if(this.current<=this.totalPages) {
                     this.queryShops(this.params.current, 5);
+          }
+
                 } else {
                     this.isReachBottom = false
                 }

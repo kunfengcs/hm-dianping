@@ -53,7 +53,7 @@
         </div>
     </div>
     <div class="introduce">
-        <span v-if="info.introduce"></span>
+    <span v-if="info.introduce">{{ info.introduce }}</span>
         <span v-else>这个人很懒，什么都没有留下</span>
     </div>
     <div class="content">
@@ -63,8 +63,8 @@
                     <div class="blog-img"><img :src="b.images.split(',')[0]" alt=""></div>
                     <div class="blog-info">
                         <div class="blog-title" v-html="b.title"></div>
-                        <div class="blog-liked"><img src="/imgs/thumbup.png" alt=""> {{b.liked}}</div>
-                        <div class="blog-comments"><i class="el-icon-chat-dot-round"></i> {{b.comments}}</div>
+            <div class="blog-liked" style="float: right"><img src="/imgs/thumbup.png" alt=""> {{b.liked}}</div>
+            <div class="blog-comments" style="float: right"><i class="el-icon-chat-dot-round"></i> {{b.comments}}</div>
                     </div>
                 </div>
             </el-tab-pane>
@@ -100,6 +100,7 @@
             user: "",
             loginUser: {},
             activeName: "1",
+      // info: sessionStorage.getItem("userinfo") ? sessionStorage.getItem("userinfo") : "",
             info: {},
             blogs: [],
             followed: false, // 是否关注了
@@ -132,6 +133,7 @@
                 axios.get("/user/" + id)
                     .then(({data}) => {
                         // 保存用户
+            console.log("query"+id)
                         this.user = data;
                         // 查询用户详情
                         this.queryUserInfo();
@@ -145,9 +147,11 @@
             goBack() {
                 history.back();
             },
-            queryUserInfo(id) {
+            queryUserInfo() {
                 axios.get("/user/info/" + this.user.id)
                     .then(({data}) => {
+            console.log(data)
+            // console.log(data.introduce)
                         if (!data) {
                             return
                         }
