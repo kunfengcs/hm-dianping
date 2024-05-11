@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.dianping_admin.mapper.TbUserMapper">
+    
+    <resultMap type="TbUser" id="TbUserResult">
+        <result property="id"    column="id"    />
+        <result property="phone"    column="phone"    />
+        <result property="password"    column="password"    />
+        <result property="nickName"    column="nick_name"    />
+        <result property="icon"    column="icon"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="isShop"    column="is_shop"    />
+    </resultMap>
+
+    <sql id="selectTbUserVo">
+        select id, phone, password, nick_name, icon, create_time, update_time, is_shop from tb_user
+    </sql>
+
+    <select id="selectTbUserList" parameterType="TbUser" resultMap="TbUserResult">
+        <include refid="selectTbUserVo"/>
+        <where>  
+            <if test="phone != null  and phone != ''"> and phone = #{phone}</if>
+            <if test="nickName != null  and nickName != ''"> and nick_name like concat('%', #{nickName}, '%')</if>
+            <if test="isShop != null "> and is_shop = #{isShop}</if>
+        </where>
+    </select>
+    
+    <select id="selectTbUserById" parameterType="Long" resultMap="TbUserResult">
+        <include refid="selectTbUserVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertTbUser" parameterType="TbUser" useGeneratedKeys="true" keyProperty="id">
+        insert into tb_user
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="phone != null">phone,</if>
+            <if test="password != null">password,</if>
+            <if test="nickName != null">nick_name,</if>
+            <if test="icon != null">icon,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="isShop != null">is_shop,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="phone != null">#{phone},</if>
+            <if test="password != null">#{password},</if>
+            <if test="nickName != null">#{nickName},</if>
+            <if test="icon != null">#{icon},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="isShop != null">#{isShop},</if>
+         </trim>
+    </insert>
+
+    <update id="updateTbUser" parameterType="TbUser">
+        update tb_user
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="password != null">password = #{password},</if>
+            <if test="nickName != null">nick_name = #{nickName},</if>
+            <if test="icon != null">icon = #{icon},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="isShop != null">is_shop = #{isShop},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteTbUserById" parameterType="Long">
+        delete from tb_user where id = #{id}
+    </delete>
+
+    <delete id="deleteTbUserByIds" parameterType="String">
+        delete from tb_user where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.dianping_admin.mapper.TbFollowMapper">
+    
+    <resultMap type="TbFollow" id="TbFollowResult">
+        <result property="id"    column="id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="followUserId"    column="follow_user_id"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <sql id="selectTbFollowVo">
+        select id, user_id, follow_user_id, create_time from tb_follow
+    </sql>
+
+    <select id="selectTbFollowList" parameterType="TbFollow" resultMap="TbFollowResult">
+        <include refid="selectTbFollowVo"/>
+        <where>  
+            <if test="userId != null "> and user_id = #{userId}</if>
+            <if test="followUserId != null "> and follow_user_id = #{followUserId}</if>
+        </where>
+    </select>
+    
+    <select id="selectTbFollowById" parameterType="Long" resultMap="TbFollowResult">
+        <include refid="selectTbFollowVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertTbFollow" parameterType="TbFollow" useGeneratedKeys="true" keyProperty="id">
+        insert into tb_follow
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">user_id,</if>
+            <if test="followUserId != null">follow_user_id,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="followUserId != null">#{followUserId},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateTbFollow" parameterType="TbFollow">
+        update tb_follow
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="followUserId != null">follow_user_id = #{followUserId},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteTbFollowById" parameterType="Long">
+        delete from tb_follow where id = #{id}
+    </delete>
+
+    <delete id="deleteTbFollowByIds" parameterType="String">
+        delete from tb_follow where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

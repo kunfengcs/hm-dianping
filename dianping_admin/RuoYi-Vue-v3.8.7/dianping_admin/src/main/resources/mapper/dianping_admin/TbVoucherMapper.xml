@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.dianping_admin.mapper.TbVoucherMapper">
+    
+    <resultMap type="TbVoucher" id="TbVoucherResult">
+        <result property="id"    column="id"    />
+        <result property="shopId"    column="shop_id"    />
+        <result property="title"    column="title"    />
+        <result property="subTitle"    column="sub_title"    />
+        <result property="rules"    column="rules"    />
+        <result property="payValue"    column="pay_value"    />
+        <result property="actualValue"    column="actual_value"    />
+        <result property="type"    column="type"    />
+        <result property="status"    column="status"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectTbVoucherVo">
+        select id, shop_id, title, sub_title, rules, pay_value, actual_value, type, status, create_time, update_time from tb_voucher
+    </sql>
+
+    <select id="selectTbVoucherList" parameterType="TbVoucher" resultMap="TbVoucherResult">
+        <include refid="selectTbVoucherVo"/>
+        <where>  
+            <if test="shopId != null "> and shop_id = #{shopId}</if>
+            <if test="title != null  and title != ''"> and title like concat('%', #{title}, '%')</if>
+            <if test="subTitle != null  and subTitle != ''"> and sub_title like concat('%', #{subTitle}, '%')</if>
+            <if test="rules != null  and rules != ''"> and rules like concat('%', #{rules}, '%')</if>
+            <if test="payValue != null "> and pay_value = #{payValue}</if>
+            <if test="actualValue != null "> and actual_value = #{actualValue}</if>
+            <if test="type != null "> and type = #{type}</if>
+            <if test="status != null "> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectTbVoucherById" parameterType="Long" resultMap="TbVoucherResult">
+        <include refid="selectTbVoucherVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertTbVoucher" parameterType="TbVoucher" useGeneratedKeys="true" keyProperty="id">
+        insert into tb_voucher
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="shopId != null">shop_id,</if>
+            <if test="title != null">title,</if>
+            <if test="subTitle != null">sub_title,</if>
+            <if test="rules != null">rules,</if>
+            <if test="payValue != null">pay_value,</if>
+            <if test="actualValue != null">actual_value,</if>
+            <if test="type != null">type,</if>
+            <if test="status != null">status,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="shopId != null">#{shopId},</if>
+            <if test="title != null">#{title},</if>
+            <if test="subTitle != null">#{subTitle},</if>
+            <if test="rules != null">#{rules},</if>
+            <if test="payValue != null">#{payValue},</if>
+            <if test="actualValue != null">#{actualValue},</if>
+            <if test="type != null">#{type},</if>
+            <if test="status != null">#{status},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateTbVoucher" parameterType="TbVoucher">
+        update tb_voucher
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="shopId != null">shop_id = #{shopId},</if>
+            <if test="title != null">title = #{title},</if>
+            <if test="subTitle != null">sub_title = #{subTitle},</if>
+            <if test="rules != null">rules = #{rules},</if>
+            <if test="payValue != null">pay_value = #{payValue},</if>
+            <if test="actualValue != null">actual_value = #{actualValue},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteTbVoucherById" parameterType="Long">
+        delete from tb_voucher where id = #{id}
+    </delete>
+
+    <delete id="deleteTbVoucherByIds" parameterType="String">
+        delete from tb_voucher where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

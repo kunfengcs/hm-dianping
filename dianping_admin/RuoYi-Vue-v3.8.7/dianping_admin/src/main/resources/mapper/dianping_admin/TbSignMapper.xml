@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.dianping_admin.mapper.TbSignMapper">
+    
+    <resultMap type="TbSign" id="TbSignResult">
+        <result property="id"    column="id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="year"    column="year"    />
+        <result property="month"    column="month"    />
+        <result property="date"    column="date"    />
+        <result property="isBackup"    column="is_backup"    />
+    </resultMap>
+
+    <sql id="selectTbSignVo">
+        select id, user_id, year, month, date, is_backup from tb_sign
+    </sql>
+
+    <select id="selectTbSignList" parameterType="TbSign" resultMap="TbSignResult">
+        <include refid="selectTbSignVo"/>
+        <where>  
+            <if test="userId != null "> and user_id = #{userId}</if>
+            <if test="year != null  and year != ''"> and year = #{year}</if>
+            <if test="month != null "> and month = #{month}</if>
+            <if test="date != null "> and date = #{date}</if>
+            <if test="isBackup != null "> and is_backup = #{isBackup}</if>
+        </where>
+    </select>
+    
+    <select id="selectTbSignById" parameterType="Long" resultMap="TbSignResult">
+        <include refid="selectTbSignVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertTbSign" parameterType="TbSign" useGeneratedKeys="true" keyProperty="id">
+        insert into tb_sign
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">user_id,</if>
+            <if test="year != null">year,</if>
+            <if test="month != null">month,</if>
+            <if test="date != null">date,</if>
+            <if test="isBackup != null">is_backup,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="year != null">#{year},</if>
+            <if test="month != null">#{month},</if>
+            <if test="date != null">#{date},</if>
+            <if test="isBackup != null">#{isBackup},</if>
+         </trim>
+    </insert>
+
+    <update id="updateTbSign" parameterType="TbSign">
+        update tb_sign
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="year != null">year = #{year},</if>
+            <if test="month != null">month = #{month},</if>
+            <if test="date != null">date = #{date},</if>
+            <if test="isBackup != null">is_backup = #{isBackup},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteTbSignById" parameterType="Long">
+        delete from tb_sign where id = #{id}
+    </delete>
+
+    <delete id="deleteTbSignByIds" parameterType="String">
+        delete from tb_sign where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
