@@ -102,4 +102,14 @@ public class TbBlogController extends BaseController
     {
         return toAjax(tbBlogService.deleteTbBlogByIds(ids));
     }
+    /**
+     * 博客总数量
+     */
+    @PreAuthorize("@ss.hasPermi('dianping_admin:blog:list')")
+    @Log(title = "博客总数量", businessType = BusinessType.OTHER)
+    @GetMapping("/count")
+    public AjaxResult count()
+    {
+        return AjaxResult.success(tbBlogService.count());
+    }
 }

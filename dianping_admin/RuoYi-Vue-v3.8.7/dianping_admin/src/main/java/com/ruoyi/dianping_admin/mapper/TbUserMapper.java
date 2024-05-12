@@ -58,4 +58,6 @@ public interface TbUserMapper
      * @return 结果
      */
     public int deleteTbUserByIds(Long[] ids);
+
+    public long count();
 }

@@ -94,4 +94,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
+    <select id="count" resultType="long">
+        select count(*) from tb_voucher_order
+    </select>
 </mapper>

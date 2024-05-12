@@ -93,4 +93,9 @@ public class TbUserServiceImpl implements ITbUserService
     {
         return tbUserMapper.deleteTbUserById(id);
     }
+
+    @Override
+    public long count() {
+        return tbUserMapper.count();
+    }
 }

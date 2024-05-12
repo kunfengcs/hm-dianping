@@ -58,4 +58,10 @@ public interface TbBlogMapper
      * @return 结果
      */
     public int deleteTbBlogByIds(Long[] ids);
+
+    /**
+     * 博客总数量
+     * @return 博客总数量
+     */
+    public long count();
 }

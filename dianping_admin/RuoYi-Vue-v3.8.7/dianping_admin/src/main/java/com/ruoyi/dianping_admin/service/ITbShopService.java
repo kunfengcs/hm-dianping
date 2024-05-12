@@ -58,4 +58,6 @@ public interface ITbShopService
      * @return 结果
      */
     public int deleteTbShopById(Long id);
+
+    public long count();
 }

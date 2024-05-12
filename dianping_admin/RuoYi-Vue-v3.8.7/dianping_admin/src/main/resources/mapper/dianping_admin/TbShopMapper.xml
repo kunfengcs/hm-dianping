@@ -114,4 +114,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
+<!--    查询商户总数-->
+    <select id="count" resultType="long">
+        select count(*) from tb_shop
+    </select>
 </mapper>

@@ -101,4 +101,15 @@ public class TbVoucherOrderController extends BaseController
     {
         return toAjax(tbVoucherOrderService.deleteTbVoucherOrderByIds(ids));
     }
+
+    /**
+     * 优惠券的订单总数量
+     */
+    @PreAuthorize("@ss.hasPermi('dianping_admin:order:list')")
+    @Log(title = "优惠券的订单", businessType = BusinessType.OTHER)
+    @GetMapping("/count")
+    public AjaxResult count()
+    {
+        return AjaxResult.success(tbVoucherOrderService.count());
+    }
 }

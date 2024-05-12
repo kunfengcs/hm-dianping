@@ -93,4 +93,10 @@ public class TbVoucherOrderServiceImpl implements ITbVoucherOrderService
     {
         return tbVoucherOrderMapper.deleteTbVoucherOrderById(id);
     }
+
+    @Override
+    public long count() {
+
+        return tbVoucherOrderMapper.count();
+    }
 }

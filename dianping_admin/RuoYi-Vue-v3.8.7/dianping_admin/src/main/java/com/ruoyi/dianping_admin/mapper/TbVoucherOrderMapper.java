@@ -58,4 +58,6 @@ public interface TbVoucherOrderMapper
      * @return 结果
      */
     public int deleteTbVoucherOrderByIds(Long[] ids);
+
+    public long count();
 }

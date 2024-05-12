@@ -93,4 +93,9 @@ public class TbShopServiceImpl implements ITbShopService
     {
         return tbShopMapper.deleteTbShopById(id);
     }
+
+    @Override
+    public long count() {
+        return tbShopMapper.count();
+    }
 }

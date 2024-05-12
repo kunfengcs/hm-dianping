@@ -101,4 +101,14 @@ public class TbUserController extends BaseController
     {
         return toAjax(tbUserService.deleteTbUserByIds(ids));
     }
+    /**
+     * 用户总数
+     */
+    @PreAuthorize("@ss.hasPermi('dianping_admin:user:list')")
+    @Log(title = "用户总数", businessType = BusinessType.OTHER)
+    @GetMapping("/count")
+    public AjaxResult count()
+    {
+        return AjaxResult.success(tbUserService.count());
+    }
 }

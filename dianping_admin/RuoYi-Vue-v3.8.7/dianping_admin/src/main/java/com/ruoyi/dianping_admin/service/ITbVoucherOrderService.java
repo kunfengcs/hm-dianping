@@ -58,4 +58,6 @@ public interface ITbVoucherOrderService
      * @return 结果
      */
     public int deleteTbVoucherOrderById(Long id);
+
+    public long count();
 }

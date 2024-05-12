@@ -58,4 +58,6 @@ public interface ITbUserService
      * @return 结果
      */
     public int deleteTbUserById(Long id);
+
+    public long count();
 }

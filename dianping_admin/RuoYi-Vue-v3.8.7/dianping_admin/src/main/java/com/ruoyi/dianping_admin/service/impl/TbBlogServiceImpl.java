@@ -93,4 +93,9 @@ public class TbBlogServiceImpl implements ITbBlogService
     {
         return tbBlogMapper.deleteTbBlogById(id);
     }
+
+    @Override
+    public long count() {
+        return tbBlogMapper.count();
+    }
 }

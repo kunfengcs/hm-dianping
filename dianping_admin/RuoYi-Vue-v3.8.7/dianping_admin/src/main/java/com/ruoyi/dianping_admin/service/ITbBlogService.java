@@ -58,4 +58,6 @@ public interface ITbBlogService
      * @return 结果
      */
     public int deleteTbBlogById(Long id);
+
+    public long count();
 }

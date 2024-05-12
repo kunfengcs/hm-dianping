@@ -101,4 +101,15 @@ public class TbShopController extends BaseController
     {
         return toAjax(tbShopService.deleteTbShopByIds(ids));
     }
+
+    /**
+     * 商户总数
+     */
+    @PreAuthorize("@ss.hasPermi('dianping_admin:shop:list')")
+    @Log(title = "商户总数", businessType = BusinessType.OTHER)
+    @GetMapping("/count")
+    public AjaxResult count()
+    {
+        return AjaxResult.success(tbShopService.count());
+    }
 }

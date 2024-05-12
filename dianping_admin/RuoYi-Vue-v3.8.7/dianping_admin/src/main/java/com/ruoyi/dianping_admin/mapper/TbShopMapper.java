@@ -58,4 +58,6 @@ public interface TbShopMapper
      * @return 结果
      */
     public int deleteTbShopByIds(Long[] ids);
+
+    public long count();
 }
