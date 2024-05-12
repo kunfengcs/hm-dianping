@@ -9,32 +9,53 @@ $yellow:#FEC171;
 $panGreen: #30B08F;
 
 // 默认菜单主题风格
-$base-menu-color:#bfcbd9;
-$base-menu-color-active:#f4f4f5;
-$base-menu-background:#304156;
-$base-logo-title-color: #ffffff;
+//$base-menu-color:#bfcbd9;
+//$base-menu-color-active:#f4f4f5;
+//$base-menu-background:#304156;
+//$base-logo-title-color: #ffffff;
+//
+//$base-menu-light-color:rgba(0,0,0,.70);
+//$base-menu-light-background:#ffffff;
+//$base-logo-light-title-color: #001529;
+//
+//$base-sub-menu-background:#1f2d3d;
+//$base-sub-menu-hover:#001528;
 
-$base-menu-light-color:rgba(0,0,0,.70);
-$base-menu-light-background:#ffffff;
-$base-logo-light-title-color: #001529;
 
-$base-sub-menu-background:#1f2d3d;
-$base-sub-menu-hover:#001528;
+// 自定义菜单主题风格
+// 明亮菜单主题风格
+
+// 主菜单颜色
+$base-menu-color: #48a9e6; // 使用白色作为默认文字色，提高对比度和亮度
+$base-menu-color-active: #48a9e6; // 活跃状态使用清新的蓝色，给人以活力和科技感
+$base-menu-background: #f0f7ff; // 背景采用淡蓝色，营造明亮舒适的视觉体验
+
+// Logo标题颜色
+$base-logo-title-color: #48a9e6; // 与活跃状态颜色相呼应，保持整体一致性
+
+// 亮色模式（如果需要）
+$base-menu-light-color: rgba(0,0,0,.54); // 确保在亮背景下文字依然清晰可读
+$base-menu-light-background: #ffffff; // 亮模式下背景保持纯白
+$base-logo-light-title-color: #48a9e6; // Logo标题颜色不变，保持品牌色一致性
+
+// 子菜单背景
+$base-sub-menu-background: #ecf5ff; // 子菜单使用更浅的蓝色，保持层次感同时不失明亮
+$base-sub-menu-hover: #dbebff; // 鼠标悬停时加深色调，但依然保持明亮，这里使用淡雅的蓝紫色
+
 
 // 自定义暗色菜单风格
-/**
-$base-menu-color:hsla(0,0%,100%,.65);
-$base-menu-color-active:#fff;
-$base-menu-background:#001529;
-$base-logo-title-color: #ffffff;
 
-$base-menu-light-color:rgba(0,0,0,.70);
-$base-menu-light-background:#ffffff;
-$base-logo-light-title-color: #001529;
-
-$base-sub-menu-background:#000c17;
-$base-sub-menu-hover:#001528;
-*/
+//$base-menu-color:hsla(0,0%,100%,.65);
+//$base-menu-color-active:#fff;
+//$base-menu-background:#001529;
+//$base-logo-title-color: #ffffff;
+//
+//$base-menu-light-color:rgba(0,0,0,.70);
+//$base-menu-light-background:#ffffff;
+//$base-logo-light-title-color: #001529;
+//
+//$base-sub-menu-background:#000c17;
+//$base-sub-menu-hover:#001528;
 
 $base-sidebar-width: 200px;
 
