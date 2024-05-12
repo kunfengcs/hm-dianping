@@ -45,3 +45,10 @@ export function delBlog(id) {
     method: 'delete'
   })
 }
+//查询博客总数
+export function getBlogCount() {
+  return request({
+    url: '/dianping_admin/blog/count',
+    method: 'get'
+  })
+}

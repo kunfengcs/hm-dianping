@@ -25,7 +25,7 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="支付金额，单位是分。例如200代表2元" prop="payValue">
+      <el-form-item label="支付金额" prop="payValue">
         <el-input
           v-model="queryParams.payValue"
           placeholder="请输入支付金额，单位是分。例如200代表2元"
@@ -33,7 +33,7 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="抵扣金额，单位是分。例如200代表2元" prop="actualValue">
+      <el-form-item label="抵扣金额" prop="actualValue">
         <el-input
           v-model="queryParams.actualValue"
           placeholder="请输入抵扣金额，单位是分。例如200代表2元"
@@ -41,7 +41,7 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="0,普通券；1,秒杀券" prop="type">
+      <el-form-item label="券类型" prop="type">
         <el-select v-model="queryParams.type" placeholder="请选择0,普通券；1,秒杀券" clearable>
           <el-option
             v-for="dict in dict.type.voucher_type"
@@ -51,7 +51,7 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="1,上架; 2,下架; 3,过期" prop="status">
+      <el-form-item label="优惠券状态" prop="status">
         <el-select v-model="queryParams.status" placeholder="请选择1,上架; 2,下架; 3,过期" clearable>
           <el-option
             v-for="dict in dict.type.voucher_status"
@@ -120,14 +120,14 @@
       <el-table-column label="代金券标题" align="center" prop="title" />
       <el-table-column label="副标题" align="center" prop="subTitle" />
       <el-table-column label="使用规则" align="center" prop="rules" />
-      <el-table-column label="支付金额，单位是分。例如200代表2元" align="center" prop="payValue" />
-      <el-table-column label="抵扣金额，单位是分。例如200代表2元" align="center" prop="actualValue" />
-      <el-table-column label="0,普通券；1,秒杀券" align="center" prop="type">
+      <el-table-column label="支付金额" align="center" prop="payValue" />
+      <el-table-column label="抵扣金额" align="center" prop="actualValue" />
+      <el-table-column label="优惠券类型" align="center" prop="type">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.voucher_type" :value="scope.row.type"/>
         </template>
       </el-table-column>
-      <el-table-column label="1,上架; 2,下架; 3,过期" align="center" prop="status">
+      <el-table-column label="优惠券状态" align="center" prop="status">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.voucher_status" :value="scope.row.status"/>
         </template>
@@ -151,7 +151,7 @@
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"

@@ -17,7 +17,7 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="关联的1级评论id，如果是一级评论，则值为0" prop="parentId">
+      <el-form-item label="关联的1级评论" prop="parentId">
         <el-input
           v-model="queryParams.parentId"
           placeholder="请输入关联的1级评论id，如果是一级评论，则值为0"
@@ -41,7 +41,7 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="状态，0：正常，1：被举报，2：禁止查看" prop="status">
+      <el-form-item label="状态" prop="status">
         <el-select v-model="queryParams.status" placeholder="请选择状态，0：正常，1：被举报，2：禁止查看" clearable>
           <el-option
             v-for="dict in dict.type.blog_comments_status"
@@ -105,14 +105,15 @@
 
     <el-table v-loading="loading" :data="commentsList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="主键" align="center" prop="id" />
+<!--      <el-table-column label="主键" align="center" prop="id" />-->
       <el-table-column label="用户id" align="center" prop="userId" />
-      <el-table-column label="探店id" align="center" prop="blogId" />
-      <el-table-column label="关联的1级评论id，如果是一级评论，则值为0" align="center" prop="parentId" />
+<!--      <el-table-column label="探店id" align="center" prop="blogId" />-->
+      <el-table-column label="用户" align="center" prop="userName" />
+      <el-table-column label="关联的1级评论" align="center" prop="parentId" />
       <el-table-column label="回复的评论id" align="center" prop="answerId" />
       <el-table-column label="回复的内容" align="center" prop="content" />
       <el-table-column label="点赞数" align="center" prop="liked" />
-      <el-table-column label="状态，0：正常，1：被举报，2：禁止查看" align="center" prop="status">
+      <el-table-column label="状态" align="center" prop="status">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.blog_comments_status" :value="scope.row.status"/>
         </template>
@@ -180,7 +181,7 @@
 
 <script>
 import { listComments, getComments, delComments, addComments, updateComments } from "@/api/dianping_admin/comments";
-
+import {getUser} from "@/api/dianping_admin/user";
 export default {
   name: "Comments",
   dicts: ['blog_comments_status'],
@@ -228,13 +229,36 @@ export default {
   },
   methods: {
     /** 查询博客评论列表 */
-    getList() {
+    // getList() {
+    //   this.loading = true;
+    //   listComments(this.queryParams).then(response => {
+    //     this.commentsList = response.rows;
+    //     this.total = response.total;
+    //     this.loading = false;
+    //   });
+    // },
+    async getList() {
       this.loading = true;
-      listComments(this.queryParams).then(response => {
+      try {
+        const response = await listComments(this.queryParams);
         this.commentsList = response.rows;
+
+        // 异步获取每个博客记录对应的用户名
+
+          for (let i = 0; i< this.commentsList.length; i++) {
+            const comments = this.commentsList[i];
+            const userData = await getUser(comments.userId);
+            comments.userName = userData.data.nickName;
+            console.log(comments.userName)
+          }
+
+
         this.total = response.total;
         this.loading = false;
-      });
+      } catch (error) {
+        console.error('Error fetching blog list or usernames', error);
+        this.loading = false;
+      }
     },
     // 取消按钮
     cancel() {

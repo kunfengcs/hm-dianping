@@ -1,15 +1,22 @@
 <template>
+  <!-- 使用Element UI的栅格系统布局四个卡片面板 -->
   <el-row :gutter="40" class="panel-group">
+    <!-- 每个卡片占据不同屏幕下的栅格数，响应式设计 -->
     <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel" @click="handleSetLineChartData('newVisitis')">
+      <!-- 卡片面板，点击时触发切换行状图数据类型 -->
+      <div class="card-panel" @click="handleSetLineChartData('blog')">
+        <!-- 图标容器，含图标和背景颜色 -->
         <div class="card-panel-icon-wrapper icon-people">
+          <!-- 使用SVG图标组件 -->
           <svg-icon icon-class="peoples" class-name="card-panel-icon" />
         </div>
         <div class="card-panel-description">
           <div class="card-panel-text">
-            访客
+            博客
           </div>
-          <count-to :start-val="0" :end-val="102400" :duration="2600" class="card-panel-num" />
+<!--          TODO 在这设置数值-->
+          <!-- 动态计数效果组件，显示统计数据 -->
+          <count-to :start-val="0" :end-val="this.blogcount" :duration="2600" class="card-panel-num" />
         </div>
       </div>
     </el-col>
@@ -20,9 +27,9 @@
         </div>
         <div class="card-panel-description">
           <div class="card-panel-text">
-            消息
+            用户
           </div>
-          <count-to :start-val="0" :end-val="81212" :duration="3000" class="card-panel-num" />
+          <count-to :start-val="0" :end-val="this.usercount" :duration="3000" class="card-panel-num" />
         </div>
       </div>
     </el-col>
@@ -33,9 +40,9 @@
         </div>
         <div class="card-panel-description">
           <div class="card-panel-text">
-            金额
+            商户
           </div>
-          <count-to :start-val="0" :end-val="9280" :duration="3200" class="card-panel-num" />
+          <count-to :start-val="0" :end-val="this.shopcount" :duration="3200" class="card-panel-num" />
         </div>
       </div>
     </el-col>
@@ -48,7 +55,7 @@
           <div class="card-panel-text">
             订单
           </div>
-          <count-to :start-val="0" :end-val="13600" :duration="3600" class="card-panel-num" />
+          <count-to :start-val="0" :end-val="this.ordercount" :duration="3600" class="card-panel-num" />
         </div>
       </div>
     </el-col>
@@ -57,27 +64,72 @@
 
 <script>
 import CountTo from 'vue-count-to'
+import {getBlogCount} from "@/api/dianping_admin/blog";
+import {getUserCount} from "@/api/dianping_admin/user";
+import {getShopCount} from "@/api/dianping_admin/shop";
+import {getOrderCount} from "@/api/dianping_admin/order"; // 引入动态计数组件
 
 export default {
   components: {
     CountTo
   },
-  methods: {
-    handleSetLineChartData(type) {
-      this.$emit('handleSetLineChartData', type)
+  data() {
+    return {
+      blogcount: null,
+      usercount: null,
+      shopcount: null,
+      ordercount: null
     }
-  }
+  },
+  created() {
+    this.getBlogCount()
+    this.getUserCount()
+    this.getShopCount()
+    this.getOrderCount()
+  },
+  methods: {
+    // 处理点击事件，向外发射自定义事件携带数据类型
+    handleSetLineChartData(type) {
+    //$emit 是 Vue 中父子组件通信的一个关键机制，允许子组件通知其父组件某些事情发生了
+      // 在这里处理来自子组件的事件，`type` 将包含子组件传递的值
+      this.$emit('handleSetLineChartData', type)
+    },
+    getBlogCount() {
+      getBlogCount().then (response => {
+        this.blogcount = response.data
+      })
+    },
+    getUserCount() {
+      getUserCount().then (response => {
+        this.usercount = response.data
+      })
+    },
+    getShopCount() {
+      getShopCount().then (response => {
+        this.shopcount = response.data
+      })
+    },
+    getOrderCount() {
+      getOrderCount().then (response => {
+        this.ordercount = response.data
+      })
+    }
+  },
 }
 </script>
 
 <style lang="scss" scoped>
+// 样式定义
 .panel-group {
+  // 设置上边距
   margin-top: 18px;
 
   .card-panel-col {
+    // 底部外边距
     margin-bottom: 32px;
   }
 
+  // 卡片样式
   .card-panel {
     height: 108px;
     cursor: pointer;

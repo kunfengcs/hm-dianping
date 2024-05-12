@@ -42,3 +42,11 @@ export function delOrder(id) {
     method: 'delete'
   })
 }
+
+//订单总数
+export function getOrderCount() {
+  return request({
+    url: '/dianping_admin/order/count',
+    method: 'get'
+  })
+}

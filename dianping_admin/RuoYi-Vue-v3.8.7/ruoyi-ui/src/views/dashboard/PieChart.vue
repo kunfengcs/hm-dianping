@@ -56,17 +56,18 @@ export default {
         },
         series: [
           {
-            name: 'WEEKLY WRITE ARTICLES',
+            name: '商户类型',
             type: 'pie',
             roseType: 'radius',
             radius: [15, 95],
             center: ['50%', '38%'],
             data: [
-              { value: 320, name: 'Industries' },
-              { value: 240, name: 'Technology' },
-              { value: 149, name: 'Forex' },
-              { value: 100, name: 'Gold' },
-              { value: 59, name: 'Forecasts' }
+              // 订单数据
+              { value: 320, name: '美食' },
+              { value: 240, name: 'ktv' },
+              { value: 149, name: '按摩' },
+              { value: 100, name: '丽人·美发' },
+              { value: 59, name: '其他' }
             ],
             animationEasing: 'cubicInOut',
             animationDuration: 2600

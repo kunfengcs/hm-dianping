@@ -9,15 +9,15 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="昵称，默认是用户id" prop="nickName">
+      <el-form-item label="昵称" prop="nickName">
         <el-input
           v-model="queryParams.nickName"
-          placeholder="请输入昵称，默认是用户id"
+          placeholder="请输入昵称"
           clearable
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="是否是商户 1商户 0用户" prop="isShop">
+      <el-form-item label="是否是商户" prop="isShop">
         <el-select v-model="queryParams.isShop" placeholder="请选择是否是商户 1商户 0用户" clearable>
           <el-option
             v-for="dict in dict.type.is_shop"
@@ -81,16 +81,16 @@
 
     <el-table v-loading="loading" :data="userList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="主键" align="center" prop="id" />
+<!--      <el-table-column label="主键" align="center" prop="id" />-->
       <el-table-column label="手机号码" align="center" prop="phone" />
-      <el-table-column label="密码，加密存储" align="center" prop="password" />
-      <el-table-column label="昵称，默认是用户id" align="center" prop="nickName" />
-      <el-table-column label="人物头像" align="center" prop="icon" width="100">
-        <template slot-scope="scope">
-          <image-preview :src="scope.row.icon" :width="50" :height="50"/>
-        </template>
-      </el-table-column>
-      <el-table-column label="是否是商户 1商户 0用户" align="center" prop="isShop">
+<!--      <el-table-column label="密码，加密存储" align="center" prop="password" />-->
+      <el-table-column label="昵称" align="center" prop="nickName" />
+<!--      <el-table-column label="人物头像" align="center" prop="icon" width="100">-->
+<!--        <template slot-scope="scope">-->
+<!--          <image-preview :src="scope.row.icon" :width="50" :height="50"/>-->
+<!--        </template>-->
+<!--      </el-table-column>-->
+      <el-table-column label="是否是商户" align="center" prop="isShop">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.is_shop" :value="scope.row.isShop"/>
         </template>
@@ -114,7 +114,7 @@
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"

@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="主键，用户id" prop="userId">
+      <el-form-item label="用户id" prop="userId">
         <el-input
           v-model="queryParams.userId"
           placeholder="请输入主键，用户id"
@@ -33,7 +33,7 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="性别，0：男，1：女" prop="gender">
+      <el-form-item label="性别" prop="gender">
         <el-select v-model="queryParams.gender" placeholder="请选择性别，0：男，1：女" clearable>
           <el-option
             v-for="dict in dict.type.sys_user_sex"
@@ -59,7 +59,7 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="会员级别，0~9级,0代表未开通会员" prop="level">
+      <el-form-item label="会员级别" prop="level">
         <el-input
           v-model="queryParams.level"
           placeholder="请输入会员级别，0~9级,0代表未开通会员"
@@ -121,12 +121,12 @@
 
     <el-table v-loading="loading" :data="infoList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="主键，用户id" align="center" prop="userId" />
+      <el-table-column label="用户id" align="center" prop="userId" />
       <el-table-column label="城市名称" align="center" prop="city" />
-      <el-table-column label="个人介绍，不要超过128个字符" align="center" prop="introduce" />
+      <el-table-column label="个人介绍" align="center" prop="introduce" />
       <el-table-column label="粉丝数量" align="center" prop="fans" />
       <el-table-column label="关注的人的数量" align="center" prop="followee" />
-      <el-table-column label="性别，0：男，1：女" align="center" prop="gender">
+      <el-table-column label="性别" align="center" prop="gender">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.sys_user_sex" :value="scope.row.gender"/>
         </template>
@@ -137,7 +137,7 @@
         </template>
       </el-table-column>
       <el-table-column label="积分" align="center" prop="credits" />
-      <el-table-column label="会员级别，0~9级,0代表未开通会员" align="center" prop="level" />
+      <el-table-column label="会员级别" align="center" prop="level" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button
@@ -157,7 +157,7 @@
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"

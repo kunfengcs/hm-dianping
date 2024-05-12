@@ -17,7 +17,7 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="商圈，例如陆家嘴" prop="area">
+      <el-form-item label="商圈" prop="area">
         <el-input
           v-model="queryParams.area"
           placeholder="请输入商圈，例如陆家嘴"
@@ -33,7 +33,7 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="均价，取整数" prop="avgPrice">
+      <el-form-item label="均价" prop="avgPrice">
         <el-input
           v-model="queryParams.avgPrice"
           placeholder="请输入均价，取整数"
@@ -57,7 +57,7 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="评分，1~5分，乘10保存，避免小数" prop="score">
+      <el-form-item label="评分" prop="score">
         <el-input
           v-model="queryParams.score"
           placeholder="请输入评分，1~5分，乘10保存，避免小数"
@@ -65,7 +65,7 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="营业时间，例如 10:00-22:00" prop="openHours">
+      <el-form-item label="营业时间" prop="openHours">
         <el-input
           v-model="queryParams.openHours"
           placeholder="请输入营业时间，例如 10:00-22:00"
@@ -130,14 +130,14 @@
       <el-table-column label="主键" align="center" prop="id" />
       <el-table-column label="商铺名称" align="center" prop="name" />
       <el-table-column label="商铺类型的id" align="center" prop="typeId" />
-      <el-table-column label="商铺图片，多个图片以','隔开" align="center" prop="images" />
-      <el-table-column label="商圈，例如陆家嘴" align="center" prop="area" />
+<!--      <el-table-column label="商铺图片，多个图片以','隔开" align="center" prop="images" />-->
+      <el-table-column label="商圈" align="center" prop="area" />
       <el-table-column label="地址" align="center" prop="address" />
-      <el-table-column label="均价，取整数" align="center" prop="avgPrice" />
+      <el-table-column label="均价" align="center" prop="avgPrice" />
       <el-table-column label="销量" align="center" prop="sold" />
       <el-table-column label="评论数量" align="center" prop="comments" />
-      <el-table-column label="评分，1~5分，乘10保存，避免小数" align="center" prop="score" />
-      <el-table-column label="营业时间，例如 10:00-22:00" align="center" prop="openHours" />
+      <el-table-column label="评分" align="center" prop="score" />
+      <el-table-column label="营业时间" align="center" prop="openHours" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button
@@ -157,7 +157,7 @@
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"

@@ -103,16 +103,29 @@
 
     <el-table v-loading="loading" :data="blogList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="主键" align="center" prop="id" />
-      <el-table-column label="商户id" align="center" prop="shopId" />
-      <el-table-column label="用户id" align="center" prop="userId" />
+<!--      <el-table-column label="主键" align="center" prop="id" />-->
+<!--      <el-table-column label="商户id" align="center" prop="shopId" />-->
+<!--      <el-table-column label="用户id" align="center" prop="userId" />-->
+      <el-table-column label="商户" align="center" prop="shopName" />
+      <el-table-column label="用户" align="center" prop="userName" />
       <el-table-column label="标题" align="center" prop="title" />
-      <el-table-column label="探店的照片，最多9张，多张以隔开" align="center" prop="images" width="100">
+<!--      <el-table-column label="探店的照片，最多9张，多张以隔开" align="center" prop="images" width="100">
         <template slot-scope="scope">
           <image-preview :src="scope.row.images" :width="50" :height="50"/>
         </template>
       </el-table-column>
-      <el-table-column label="探店的文字描述" align="center" prop="content" />
+      <el-table-column label="探店的文字描述" align="center" prop="content" />-->
+      <el-table-column label="探店的文字描述" align="center">
+        <template slot-scope="scope">
+          <!-- 使用计算属性或方法决定是否需要显示省略号 -->
+          <div
+            :class="{ 'text-ellipsis': scope.row.content.length > 20 }"
+            :title="scope.row.content"
+          >
+            {{ scope.row.content.length > 20 ? scope.row.content.slice(0, 20) + '...' : scope.row.content }}
+          </div>
+        </template>
+      </el-table-column>
       <el-table-column label="点赞数量" align="center" prop="liked" />
       <el-table-column label="评论数量" align="center" prop="comments" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
@@ -169,6 +182,8 @@
 
 <script>
 import { listBlog, getBlog, delBlog, addBlog, updateBlog } from "@/api/dianping_admin/blog";
+import {getUser} from "@/api/dianping_admin/user";
+import {getShop} from "@/api/dianping_admin/shop";
 
 export default {
   name: "Blog",
@@ -213,16 +228,50 @@ export default {
   },
   created() {
     this.getList();
+    this.getallName();
   },
   methods: {
     /** 查询用户博客列表 */
-    getList() {
+    // getList() {
+    //   this.loading = true;
+    //   listBlog(this.queryParams).then(response => {
+    //     this.blogList = response.rows;
+    //     this.total = response.total;
+    //     this.loading = false;
+    //   });
+    // },
+    async getList() {
       this.loading = true;
-      listBlog(this.queryParams).then(response => {
+      try {
+        const response = await listBlog(this.queryParams);
         this.blogList = response.rows;
+
+        // 定义一个函数来获取名称，无论是用户还是商户
+        const getNameById = async (id, type) => {
+          let name;
+          if (type === 'user') {
+            const userData = await getUser(id);
+            name = userData.data.nickName;
+          } else if (type === 'shop') {
+            const shopData = await getShop(id);
+            name = shopData.data.name; // 假设shopData的结构是 { name: '商户名称' }
+          }
+          return name;
+        };
+
+        // 并行获取所有需要的名称
+        for (let i = 0; i < this.blogList.length; i++) {
+          const blog = this.blogList[i];
+          blog.userName = await getNameById(blog.userId, 'user');
+          blog.shopName = await getNameById(blog.shopId, 'shop');
+        }
+
         this.total = response.total;
         this.loading = false;
-      });
+      } catch (error) {
+        console.error('Error fetching blog list or names', error);
+        this.loading = false;
+      }
     },
     // 取消按钮
     cancel() {
@@ -314,6 +363,6 @@ export default {
         ...this.queryParams
       }, `blog_${new Date().getTime()}.xlsx`)
     }
-  }
+  },
 };
 </script>

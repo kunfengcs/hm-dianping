@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="下单的用户id" prop="userId">
+      <el-form-item label="用户id" prop="userId">
         <el-input
           v-model="queryParams.userId"
           placeholder="请输入下单的用户id"
@@ -9,7 +9,7 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="购买的代金券id" prop="voucherId">
+      <el-form-item label="代金券id" prop="voucherId">
         <el-input
           v-model="queryParams.voucherId"
           placeholder="请输入购买的代金券id"
@@ -17,7 +17,7 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="支付方式 1：余额支付；2：支付宝；3：微信" prop="payType">
+      <el-form-item label="支付方式" prop="payType">
         <el-select v-model="queryParams.payType" placeholder="请选择支付方式 1：余额支付；2：支付宝；3：微信" clearable>
           <el-option
             v-for="dict in dict.type.pay_type"
@@ -27,7 +27,7 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="订单状态，1：未支付；2：已支付；3：已核销；4：已取消；5：退款中；6：已退款" prop="status">
+      <el-form-item label="订单状态" prop="status">
         <el-select v-model="queryParams.status" placeholder="请选择订单状态，1：未支付；2：已支付；3：已核销；4：已取消；5：退款中；6：已退款" clearable>
           <el-option
             v-for="dict in dict.type.order_status"
@@ -124,14 +124,14 @@
     <el-table v-loading="loading" :data="orderList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="主键" align="center" prop="id" />
-      <el-table-column label="下单的用户id" align="center" prop="userId" />
-      <el-table-column label="购买的代金券id" align="center" prop="voucherId" />
-      <el-table-column label="支付方式 1：余额支付；2：支付宝；3：微信" align="center" prop="payType">
+      <el-table-column label="用户id" align="center" prop="userId" />
+      <el-table-column label="代金券id" align="center" prop="voucherId" />
+      <el-table-column label="支付方式" align="center" prop="payType">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.pay_type" :value="scope.row.payType"/>
         </template>
       </el-table-column>
-      <el-table-column label="订单状态，1：未支付；2：已支付；3：已核销；4：已取消；5：退款中；6：已退款" align="center" prop="status">
+      <el-table-column label="订单状态" align="center" prop="status">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.order_status" :value="scope.row.status"/>
         </template>
@@ -175,7 +175,7 @@
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"

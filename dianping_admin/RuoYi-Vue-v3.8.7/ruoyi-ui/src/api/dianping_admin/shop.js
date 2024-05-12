@@ -42,3 +42,11 @@ export function delShop(id) {
     method: 'delete'
   })
 }
+
+// 商户总数
+export function getShopCount() {
+  return request({
+    url: '/dianping_admin/shop/count',
+    method: 'get'
+  })
+}

@@ -42,3 +42,11 @@ export function delUser(id) {
     method: 'delete'
   })
 }
+
+//用户总数
+export function getUserCount() {
+  return request({
+    url: '/dianping_admin/user/count',
+    method: 'get'
+  })
+}
