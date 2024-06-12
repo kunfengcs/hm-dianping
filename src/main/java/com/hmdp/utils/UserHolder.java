@@ -16,4 +16,12 @@ public class UserHolder {
     public static void removeUser(){
         tl.remove();
     }
+
+
+    public static void updateNickname(String newNickname) {
+        if (getUser() != null) {
+            UserDTO user = getUser();
+            user.setNickName(newNickname);
+        }
+    }
 }

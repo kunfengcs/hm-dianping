@@ -4,7 +4,7 @@
 毕业设计项目
 同城生活O2O系统平台后端
 
-#### [项目前端](hm-dianping_front/nginx-1.18.0/html/hmdp)
+#### [项目前端](dianping_front/nginx-1.18.0/html/hmdp)
 ## 使用的技术
 #### 后端
 - Spring Boot 2.3.12.RELEASE

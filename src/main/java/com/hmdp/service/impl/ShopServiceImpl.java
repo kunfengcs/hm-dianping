@@ -1,19 +1,41 @@
 package com.hmdp.service.impl;
 
-import cn.hutool.core.util.BooleanUtil;
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSON;
-import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.hmdp.dto.PageResult;
+import com.hmdp.dto.RequestParams;
 import com.hmdp.dto.Result;
 import com.hmdp.entity.Shop;
 import com.hmdp.mapper.ShopMapper;
 import com.hmdp.service.IShopService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmdp.utils.CacheClient;
-import com.hmdp.utils.RedisData;
+import com.hmdp.utils.RedisConstants;
 import com.hmdp.utils.SystemConstants;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.geo.GeoPoint;
+import org.elasticsearch.common.unit.DistanceUnit;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
+import org.elasticsearch.search.suggest.Suggest;
+import org.elasticsearch.search.suggest.SuggestBuilder;
+import org.elasticsearch.search.suggest.SuggestBuilders;
+import org.elasticsearch.search.suggest.completion.CompletionSuggestion;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
@@ -24,12 +46,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-
-import java.time.LocalDateTime;
+import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.hmdp.utils.RedisConstants.*;
 
@@ -51,6 +71,9 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
     @Resource
     private CacheClient cacheClient;
+
+    @Resource
+    private ShopMapper shopMapper;
 
     @Override
     public Result queryById(Long id){
@@ -109,10 +132,66 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     }
 
     @Override
-    public Result queryByType(Integer typeId, Integer current, Double x, Double y) {
+    public Result queryByType(Integer typeId, Integer current, Double x, Double y,String sortBy) {
 
+
+        //如果可以按照评分排序
+//        if (sortBy!=null && sortBy.equals("score")){
+//            String key1 = SCORE_GEO_KEY+typeId;
+//            List<String> list = stringRedisTemplate.opsForList().range(key1, 0, -1);
+//            if (!CollectionUtil.isEmpty(list)){
+//                //不为空则将json转为bean集合
+//                List<Shop> shopTypeList = list.stream().map(item -> JSONUtil.toBean(item, Shop.class))
+//                        .sorted(Comparator.comparingInt(Shop::getScore).reversed())
+//                        .collect(Collectors.toList());
+//                List<Long> ids = shopTypeList.stream().map(Shop::getId).collect(Collectors.toList());
+//                String idStr = StrUtil.join(",", ids);
+//                List<Shop> result = query().in("id", ids).last("ORDER BY FIELD(id," + idStr + ")").list();
+//                return Result.ok(result);
+//            }
+//
+//        }
+        if (sortBy!=null && sortBy.equals("score")){
+            // 构造查询条件
+            LambdaQueryWrapper<Shop> queryWrapper = Wrappers.lambdaQuery();
+            queryWrapper.eq(Shop::getTypeId, typeId); // 根据类型ID过滤
+
+            // 添加排序条件，按score降序排列
+            queryWrapper.orderByDesc(Shop::getScore);
+
+            // 执行查询并返回结果列表
+            return Result.ok(shopMapper.selectList(queryWrapper));
+
+        }
+//        if (sortBy!=null && sortBy.equals("comments")){
+//            String key1 = RedisConstants.Comments_GEO_KEY+typeId;
+//            List<String> list = stringRedisTemplate.opsForList().range(key1, 0, -1);
+//            if (!CollectionUtil.isEmpty(list)){
+//                //不为空则将json转为bean集合
+//                List<Shop> shopTypeList = list.stream().map(item -> JSONUtil.toBean(item, Shop.class))
+//                        .sorted(Comparator.comparingInt(Shop::getComments).reversed())
+//                        .collect(Collectors.toList());
+//                List<Long> ids = shopTypeList.stream().map(item -> item.getId()).collect(Collectors.toList());
+//                String idStr = StrUtil.join(",", ids);
+//                List<Shop> result = query().in("id", ids).last("ORDER BY FIELD(id," + idStr + ")").list();
+//                return Result.ok(result);
+//            }
+//
+//        }
+        if (sortBy!=null && sortBy.equals("comments")){
+            // 构造查询条件
+            LambdaQueryWrapper<Shop> queryWrapper = Wrappers.lambdaQuery();
+            queryWrapper.eq(Shop::getTypeId, typeId); // 根据类型ID过滤
+
+            // 添加排序条件，按comments降序排列
+            queryWrapper.orderByDesc(Shop::getComments);
+
+            // 执行查询并返回结果列表
+            return Result.ok(shopMapper.selectList(queryWrapper));
+
+        }
         // 1, 判断是否需要根据坐标查询
-        if (x == null || y == null) {
+        if ((x == null || y == null) && sortBy == null) {
             //不需要根据坐标查询，按数据库查询
             Page<Shop> page = query()
                     .eq("type_id", typeId)
@@ -137,7 +216,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
                 .search(
                         key,
                         GeoReference.fromCoordinate(x, y),
-                        new Distance(5000),
+                        new Distance(9999, RedisGeoCommands.DistanceUnit.KILOMETERS),
                         RedisGeoCommands.GeoSearchCommandArgs
                                 .newGeoSearchArgs().includeDistance().limit(end)
                 );
@@ -302,4 +381,129 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     private void unlock(String key){
         stringRedisTemplate.delete(key);
     }*/
+
+
+
+
+    //es相关
+//    @Autowired
+//    private RestHighLevelClient restHighLevelClient;
+    @Override
+    public PageResult search(RequestParams params) {
+    /*    //1.准备request
+        SearchRequest request = new SearchRequest("hotel");
+        //2.准备DSL
+        // 1.准备Boolean查询
+        buildBasicQuery(params,request);
+
+        //排序
+        String location = params.getLocation();
+        if (StringUtils.isNotBlank(location)) {
+            request.source().sort(SortBuilders
+                    .geoDistanceSort("location", new GeoPoint(location))
+                    .order(SortOrder.ASC)
+                    .unit(DistanceUnit.KILOMETERS)
+            );
+        }
+
+        //3.发送请求
+        SearchResponse response = null;
+        try {
+            response = restHighLevelClient.search(request, RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        //4.解析响应
+        return handleResponse(response);*/
+
+        return null;
+    }
+
+
+
+    private  void buildBasicQuery(RequestParams params,SearchRequest request) {
+/*        BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
+
+        // 1.1.关键字搜索，match查询，放到must中
+        String key = params.getKey();
+        if (StringUtils.isNotBlank(key)) {
+            // 不为空，根据关键字查询
+            boolQuery.must(QueryBuilders.matchQuery("all", key));
+        } else {
+            // 为空，查询所有
+            boolQuery.must(QueryBuilders.matchAllQuery());
+        }*/
+
+    }
+
+    private PageResult handleResponse(SearchResponse response) {
+    /*    SearchHits searchHits = response.getHits();
+        long total = searchHits.getTotalHits().value;
+        // 4.2.获取文档数组
+        SearchHit[] hits = searchHits.getHits();
+        // 4.3.遍历
+        List<Shop> hotels = new ArrayList<>(hits.length);
+        for (SearchHit hit : hits) {
+            // 4.4.获取source
+            String json = hit.getSourceAsString();
+            // 4.5.反序列化，非高亮的
+            Shop shop = JSONUtil.toBean(json, Shop.class);
+            // 4.6.处理高亮结果
+            // 1)获取高亮map
+            Map<String, HighlightField> map = hit.getHighlightFields();
+            if (map != null && !map.isEmpty()) {
+//                 2）根据字段名，获取高亮结果
+                HighlightField highlightField = map.get("name");
+                if (highlightField != null) {
+//                     3）获取高亮结果字符串数组中的第1个元素
+                    String hName = highlightField.getFragments()[0].toString();
+//                     4）把高亮结果放到HotelDoc中
+                    shop.setName(hName);
+                }
+            }
+            // 4.9.放入集合
+            hotels.add(shop);
+        }
+        return new PageResult(total, hotels);
+    */
+    return null;}
+
+    @Override
+    public Result getSuggestion(String key) {
+ /*       try {
+            // 1.准备请求
+            SearchRequest request = new SearchRequest("qq_news");
+            // 2.请求参数
+            request.source().suggest(new SuggestBuilder()
+                    .addSuggestion(
+                            "shopSuggest",
+                            SuggestBuilders
+                                    .completionSuggestion("suggestion")
+                                    .size(10)
+                                    .skipDuplicates(true)
+                                    .prefix(key)
+                    ));
+            // 3.发出请求
+            SearchResponse response = restHighLevelClient.search(request, RequestOptions.DEFAULT);
+            // 4.解析
+            Suggest suggest = response.getSuggest();
+            // 4.1.根据名称获取结果
+            CompletionSuggestion suggestion = suggest.getSuggestion("shopSuggest");
+            // 4.2.获取options
+            List<String> list = new ArrayList<>();
+            for (CompletionSuggestion.Entry.Option option : suggestion.getOptions()) {
+                // 4.3.获取补全的结果
+                String str = option.getText().toString();
+
+                // 4.4.放入集合
+                list.add(str);
+            }
+
+            return Result.ok(list);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+   */
+    return null;}
+
 }

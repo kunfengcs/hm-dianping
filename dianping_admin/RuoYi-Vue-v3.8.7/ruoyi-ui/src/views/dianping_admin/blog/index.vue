@@ -126,6 +126,11 @@
           </div>
         </template>
       </el-table-column>
+      <el-table-column label="探店的照片" align="center" prop="images" width="100">
+      <template slot-scope="scope">
+        <image-preview :src="'http://localhost:8880/' + getImageBeforeComma(scope.row.images)" :width="50" :height="50"/>
+      </template>
+      </el-table-column>
       <el-table-column label="点赞数量" align="center" prop="liked" />
       <el-table-column label="评论数量" align="center" prop="comments" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
@@ -362,7 +367,14 @@ export default {
       this.download('dianping_admin/blog/export', {
         ...this.queryParams
       }, `blog_${new Date().getTime()}.xlsx`)
+    },
+    // 方法实现，如果只需要读取不变更，也可以用computed
+    getImageBeforeComma(images) {
+      // 使用split方法截取字符串，直到第一个逗号前的部分
+      return images ? images.split(',')[0] : '';
+      // 注意检查images是否定义，避免undefined.split导致的错误
     }
+
   },
 };
 </script>

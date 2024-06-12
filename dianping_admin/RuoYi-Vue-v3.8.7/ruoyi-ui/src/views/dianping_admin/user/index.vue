@@ -85,11 +85,11 @@
       <el-table-column label="手机号码" align="center" prop="phone" />
 <!--      <el-table-column label="密码，加密存储" align="center" prop="password" />-->
       <el-table-column label="昵称" align="center" prop="nickName" />
-<!--      <el-table-column label="人物头像" align="center" prop="icon" width="100">-->
-<!--        <template slot-scope="scope">-->
-<!--          <image-preview :src="scope.row.icon" :width="50" :height="50"/>-->
-<!--        </template>-->
-<!--      </el-table-column>-->
+      <el-table-column label="人物头像" align="center" prop="icon" width="100">
+        <template slot-scope="scope">
+          <image-preview :src="'http://localhost:8880/' + scope.row.icon" :width="50" :height="50"/>
+        </template>
+      </el-table-column>
       <el-table-column label="是否是商户" align="center" prop="isShop">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.is_shop" :value="scope.row.isShop"/>

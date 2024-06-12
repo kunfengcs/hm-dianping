@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
-    <title>黑马点评</title>
+    <title>点评系统</title>
     <!-- 引入样式 -->
     <link rel="stylesheet" href="./css/element.css">
     <link href="./css/main.css" rel="stylesheet">
@@ -97,23 +97,23 @@
             </div>
         </div>
 
-        <div class="info-box">
-            <div class="info-item">
-                <div class="info-label">我的积分</div>
-                <div class="info-btn">
-                    <div>查看积分</div>
-                    <div><i class="el-icon-arrow-right"></i></div>
-                </div>
-            </div>
-            <div class="divider"></div>
-            <div class="info-item">
-                <div class="info-label">会员等级</div>
-                <div class="info-btn">
-                    <div><a href="javascript:void(0)">成为VIP尊享特权</a></div>
-                    <div><i class="el-icon-arrow-right"></i></div>
-                </div>
-            </div>
-        </div>
+<!--        <div class="info-box">-->
+<!--            <div class="info-item">-->
+<!--                <div class="info-label">我的积分</div>-->
+<!--                <div class="info-btn">-->
+<!--                    <div>查看积分</div>-->
+<!--                    <div><i class="el-icon-arrow-right"></i></div>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--            <div class="divider"></div>-->
+<!--            <div class="info-item">-->
+<!--                <div class="info-label">会员等级</div>-->
+<!--                <div class="info-btn">-->
+<!--                    <div><a href="javascript:void(0)">成为VIP尊享特权</a></div>-->
+<!--                    <div><i class="el-icon-arrow-right"></i></div>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
     </div>
     <foot-bar :active-btn="4"></foot-bar>
 </div>
@@ -272,7 +272,7 @@
             },
             handleAvatarSuccess(res){
                 console.log("成功有调用")
-                this.user.icon=res
+                this.user.icon="imgs\\"+res;
                 this.getUser()
                 console.log("成功")
             }

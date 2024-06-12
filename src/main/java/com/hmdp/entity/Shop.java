@@ -71,6 +71,10 @@ public class Shop implements Serializable {
      */
     private Double y;
 
+
+    @TableField(exist = false)
+    private String location;
+
     /**
      * 均价，取整数
      */
@@ -109,4 +113,8 @@ public class Shop implements Serializable {
 
     @TableField(exist = false)
     private Double distance;
+
+    public Shop() {
+    }
+
 }

@@ -6,7 +6,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <!-- 设置页面标题 -->
-    <title>黑马点评</title>
+    <title>点评系统</title>
     <!-- 引入样式 -->
     <link rel="stylesheet" href="./css/element.css">
     <link href="./css/main.css" rel="stylesheet">
@@ -36,6 +36,15 @@
         .el-tabs__content {
             height: 90%;
         }
+
+        .scrollable-pane {
+            overflow-y: auto;
+        }
+
+        .scrollable-content {
+            max-height: 400px; /* 调整最大高度的值 */
+        }
+
     </style>
 
 </head>
@@ -72,6 +81,9 @@
             退出登录
         </div>
     </div>
+    <div style="font-size: 18px;margin-left: 20px;color: #409eff">连续签到天数：{{this.signInDays}}天</div>
+<!--    签到功能-->
+    <el-button @click= "signIn">签到</el-button>
 <!--  TODD  在这加一个根据是否是商户出现的添加优惠卷按钮-->
         <el-button v-if="user.isShop === 1"><a href="/voucher-add.html">添加优惠劵</a></el-button>
         <!-- 个人简介区域 -->
@@ -85,29 +97,62 @@
         <el-tabs v-model="activeName" @tab-click="handleClick">
                 <!-- 笔记选项卡 -->
             <el-tab-pane label="笔记" name="1">
-                    <!-- 遍历显示用户的笔记 -->
+                <div class="scrollable-pane"  @scroll="onScroll">
+<!--                <div class="scrollable-pane" ref="scrollablePane" @scroll="handleScroll">-->
+                <div class="scrollable-content" >
                 <div v-for="b in blogs" :key="b.id" class="blog-item">
-                        <!-- 笔记图片 -->
                     <div class="blog-img"><img :src="b.images.split(',')[0]" alt=""></div>
-                        <!-- 笔记信息 -->
                     <div class="blog-info">
-                            <!-- 笔记标题 -->
                         <div class="blog-title">{{b.title}}</div>
-                            <!-- 点赞数 -->
-                        <div class="blog-liked"><img src="/imgs/thumbup.png" alt=""> {{b.liked}}</div>
-                            <!-- 评论数 -->
-                        <div class="blog-comments"><i class="el-icon-chat-dot-round"></i> {{b.comments}}</div>
+                            <div class="blog-liked" style="float: right"><img src="/imgs/thumbup.png" alt=""
+                                                                              @click="addLike(b)"> {{b.liked}}
+                            </div>
+                            <div class="blog-comments" style="float: right"><i class="el-icon-chat-dot-round"></i>
+                                {{b.comments}}
+                            </div>
+
+                        </div>
+                        <div style="float: right;padding-top: 15px;padding-left: 10px">
+                        <el-button type="text" style="color: red;" @click="del(b.id)"
+                                  >删除
+                        </el-button>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </el-tab-pane>
+            <el-tab-pane label="粉丝" name="2">
+                <div>你关注谁：</div>
+                <div class="follow-info" v-for="u in YoursFollows" :key="u.id">
+                    <div class="follow-info-icon" @click="toOtherInfo(u.id)">
+                        <img :src="u.icon || '/imgs/icons/default-icon.png'" alt="">
+                    </div>
+                    <div class="follow-info-name">
+                        <div class="name">{{u.nickName}}</div>
+                    </div>
+                    <div class="follow-info-btn" @click="toOtherInfo(u.id)">
+                        去主页看看
                     </div>
                 </div>
             </el-tab-pane>
-                <!-- 评价选项卡 -->
-            <el-tab-pane label="评价" name="2">评价</el-tab-pane>
-                <!-- 粉丝选项卡 -->
-            <el-tab-pane label="粉丝(0)" name="3">粉丝(0)</el-tab-pane>
-                <!-- 关注选项卡 -->
-            <el-tab-pane label="关注(0)" name="4">
-                    <!-- 关注的人的博客列表 -->
-                <div class="blog-list" @scroll="onScroll">
+
+            <el-tab-pane label="关注" name="3" @click="queryCommonFollow()">
+
+                    <div>谁关注你：</div>
+                    <div class="follow-info" v-for="u in commonFollows" :key="u.id">
+                        <div class="follow-info-icon" @click="toOtherInfo(u.id)">
+                            <img :src="u.icon || '/imgs/icons/default-icon.png'" alt="">
+                        </div>
+                        <div class="follow-info-name">
+                            <div class="name">{{u.nickName}}</div>
+                        </div>
+                        <div class="follow-info-btn" @click="toOtherInfo(u.id)">
+                            去主页看看
+                    </div>
+                </div>
+            </el-tab-pane>
+            <el-tab-pane label="推送" name="4" >
+                <div class="blog-list" >
                     <div class="blog-box" v-for="b in blogs2" :key="b.id">
                             <!-- 博客图片 -->
                         <div class="blog-img2" @click="toBlogDetail(b)"><img :src="b.img" alt=""></div>
@@ -115,9 +160,8 @@
                         <div class="blog-title">{{b.title}}</div>
                             <!-- 博客作者信息 -->
                         <div class="blog-foot">
-                                <!-- 作者头像 -->
-                                <div class="blog-user-icon"><img :src="b.icon || '/imgs/icons/default-icon.png'" alt=""></div>
-                                <!-- 作者昵称 -->
+                            <div class="blog-user-icon"><img :src="b.icon || '/imgs/icons/default-icon.png'" alt="">
+                            </div>
                             <div class="blog-user-name">{{b.name}}</div>
                                 <!-- 点赞按钮 -->
                             <div class="blog-liked" @click="addLike(b)">
@@ -168,11 +212,14 @@
             current: 1,  // 添加当前页数属性
             totalPages:0,
             commonFollows: [], // 谁关注我
-            YoursFollows:[]  //你关注谁
+            YoursFollows:[] , //你关注谁
+            signInDays:null
         },
         created() {
                 // 初始化页面，获取用户信息
             this.queryUser();
+            //获取连续签到日数
+            this.querySignInDays();
         },
         methods: {
             del(id) {
@@ -265,7 +312,6 @@
                         // 查询用户详情
                         this.queryUserInfo();
                         // 查询用户笔记
-                        this.queryBlogs();
                         this.queryBlogs(this.current);
                         console.log("user:"+data.id)
                         localStorage.setItem("userId", JSON.stringify(data.id))
@@ -334,10 +380,18 @@
             },
                 // 点赞操作
             addLike(b) {
+                const current = this.current;
                 axios.put("/blog/like/" + b.id)
                     .then(({data}) => {
-                            // 更新点赞信息
+                        axios.get("/blog/cache", {params: {current: current}}).then(({data}) => {
+
+                            console.log("删除缓存成功")
+                        })
+                        axios.get("/blog/" + b.id)
+                            .then(({data}) => {
                         this.queryBlogById(b);
+                    })
+                            .catch(this.$message.error)
                     })
                     .catch(err => {
                             // 点赞失败，提示错误
@@ -411,6 +465,26 @@
                 }else{
                     this.isReachBottom = false
                 }
+            },
+            //签到
+            signIn(){
+                axios.post("/user/sign")
+                    .then(({data}) => {
+                        this.$message.success('签到成功！'); // 添加签到成功的用
+                    })
+                    .catch(err => {
+                        this.$message.error(err)
+                    })
+            },
+            //查询连续签到天数
+            querySignInDays(){
+                axios.get("/user/sign/count")
+                    .then(({data}) => {
+                        this.signInDays = data;
+                    })
+                    .catch(err => {
+                        this.$message.error(err)
+                    })
             },
         },
 

@@ -1,7 +1,9 @@
 package com.hmdp.service;
 
-import com.hmdp.entity.BlogComments;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.hmdp.entity.BlogComments;
+
+import java.util.List;
 
 /**
  * <p>
@@ -13,4 +15,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface IBlogCommentsService extends IService<BlogComments> {
 
+
+    List<BlogComments> findCommentDetail(Long blogId);
 }

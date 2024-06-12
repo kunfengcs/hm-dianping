@@ -76,9 +76,8 @@ public class UserController {
     })
     @PostMapping("/logout")
     public Result logout(){
-        // TODO 实现登出功能 将Redis数据删除
-        UserHolder.removeUser();
-        return Result.fail("功能未完成");
+        // TODO 实现登出功能
+        return userService.logout();
     }
 
     @ApiOperation(value = "获取当前登录用户信息", notes = "获取当前登录的用户并返回")
@@ -142,6 +141,7 @@ public class UserController {
      * @param userId 用户ID
      * @return 用户dto
      */
+    @ApiOperation(value = "根据ID查询用户", notes = "根据ID查询用户")
     @GetMapping("/{id}")
     public Result queryById(@PathVariable("id") Long userId) {
         // 查询详情
@@ -151,5 +151,76 @@ public class UserController {
         }
         UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
         return Result.ok(userDTO);
+    }
+
+    /**
+     * 签到功能
+     * @return
+     */
+    @ApiOperation(value = "签到功能", notes = "实现签到功能")
+    @PostMapping("/sign")
+    public Result sign(){
+        return userService.sign();
+    }
+
+    /**
+     * 签到统计
+     *
+     * @return 连续签到天数
+     */
+    @GetMapping("/sign/count")
+    public Result signCount() {
+        return userService.signCount();
+    }
+    /**
+     * 获取详细信息和更新
+     */
+    @ApiOperation(value = "获取详细信息和更新", notes = "获取详细信息和更新")
+    @PutMapping("/info")
+    public Result updateInfo(@RequestBody UserInfo user){
+        return userInfoService.updateInfo(user);
+    }
+
+    /**
+     * 获取详细信息
+     */
+    @ApiOperation(value = "获取详细信息", notes = "获取详细信息")
+    @GetMapping("/getInfo")
+    public Result getUserInfo(){
+        return userInfoService.getUserInfo();
+    }
+
+    /**
+     * 改变昵称
+     */
+    @ApiOperation(value = "改变昵称", notes = "改变昵称")
+    @PutMapping("/changeName")
+    public Result updateInfo(@RequestParam("nickName") String nickName ){
+        return userService.changeName(nickName);
+    }
+
+    /**
+     * 获取用户
+     */
+    @ApiOperation(value = "获取用户", notes = "获取用户")
+    @GetMapping("/getUser")
+    public Result getUser(@RequestParam("id")String id){
+        User user = userService.getById(id);
+        return Result.ok(user);
+    }
+
+    /**
+     * 修改密码
+     */
+    @ApiOperation(value = "修改密码", notes = "修改密码")
+    @PutMapping("/changePassword")
+    public Result changePassword(@RequestParam("password")String password,@RequestParam("newPassword")String newPassword){
+        User user = userService.getById(UserHolder.getUser().getId());
+        if (user.getPassword().equals(password)){
+            user.setPassword(newPassword);
+            userService.updateById(user);
+            return Result.ok("修改成功");
+        }
+        return Result.fail("修改失败");
     }
 }

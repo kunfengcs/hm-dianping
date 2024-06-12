@@ -2,7 +2,11 @@ package com.hmdp.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.crypto.digest.BCrypt;
+import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmdp.dto.LoginFormDTO;
 import com.hmdp.dto.Result;
@@ -10,19 +14,22 @@ import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.User;
 import com.hmdp.mapper.UserMapper;
 import com.hmdp.service.IUserService;
+import com.hmdp.utils.JwtTokenUtil;
 import com.hmdp.utils.RegexUtils;
+import com.hmdp.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.connection.BitFieldSubCommands;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.StringTokenizer;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.hmdp.utils.RedisConstants.*;
@@ -42,6 +49,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+
+    @Autowired
+    JwtTokenUtil tokenUtil;
+    @Autowired
+    private UserInfoServiceImpl userInfoServiceImpl;
+
+    @Resource
+    private UserMapper userMapper;
+
     @Override
     public Result sendCode(String phone, HttpSession session) {
         //1,校验手机号
@@ -71,12 +87,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         //3,校验验证码
         String cacheCode = stringRedisTemplate.opsForValue().get(LOGIN_CODE_KEY + phone);
 //        Object cacheCode = session.getAttribute("code");
-
+        //查询密码
+        String userpassword = userMapper.getPassword(phone);
         String code = loginForm.getCode();
-        if (cacheCode == null || ! cacheCode.toString().equals(code)){
-            //3,不一致 ，报错
-            return Result.fail("验证码错误");
+        String password = loginForm.getPassword();
+        boolean correctPassword = false;
+        boolean correctCode = false;
+        if (userpassword != null && password != null) {
+            correctPassword = userpassword.equals(password); //1
         }
+        if(cacheCode != null &&code != null ){
+            correctCode = !StringUtils.isEmpty(cacheCode) && cacheCode.equals(code); //0
+        }
+        // 如果验证码或密码有一个正确，允许登录
+        if (!correctCode && !correctPassword) {
+            return Result.fail("验证码或密码错误");
+        }
+
         //一致，根据手机号查询用户
         User user = query().eq("phone", phone).one();
         //5,判断用户是否存在
@@ -85,7 +112,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             user = createUserWithPhone(phone);
         }
 
-        //7.保存用户信息到redis 中
+/*        //7.保存用户信息到redis 中
         //7.1随机生成token，作为登录令牌
         String token = UUID.randomUUID().toString();
         //7.2将User对象转换为HashMap存储
@@ -99,7 +126,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         String tokenKey = LOGIN_USER_KEY + token;
         stringRedisTemplate.opsForHash().putAll(tokenKey,userMap);
         //7.4设置token有效期
-        stringRedisTemplate.expire(tokenKey,LOGIN_USER_TTL, TimeUnit.MINUTES);
+        stringRedisTemplate.expire(tokenKey,LOGIN_USER_TTL, TimeUnit.MINUTES);*/
+
+        //升级成jwt
+        //1,拼接token负载
+        UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
+        String token = tokenUtil.generateToken(userDTO);
+        //uv统计
+        stringRedisTemplate.opsForHyperLogLog().add(LOGIN_USER_KEY,user.getId().toString());
         //8返回token
         return Result.ok(token);
 
@@ -109,6 +143,114 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return Result.ok();*/
 
     }
+    @Override
+    public Result sign() {
+        // 1.获取当前登录用户
+        Long userId = UserHolder.getUser().getId();
+        // 2.获取日期
+        LocalDateTime now = LocalDateTime.now();
+        // 3.拼接key
+        String keySuffix = now.format(DateTimeFormatter.ofPattern(":yyyyMM"));
+        String key = USER_SIGN_KEY + userId + keySuffix;
+        // 4.获取今天是本月的第几天
+        int dayOfMonth = now.getDayOfMonth();
+        // 5.写入Redis SETBIT key offset 1
+        stringRedisTemplate.opsForValue().setBit(key, dayOfMonth - 1, true);//这里是从0开始的，这里的true表示签到了
+        return Result.ok();
+    }
+
+    @Override
+    public Result signCount() {
+        // 1.获取当前登录用户
+        Long userId = UserHolder.getUser().getId();
+        // 2.获取日期
+        LocalDateTime now = LocalDateTime.now();
+        // 3.拼接key
+        String keySuffix = now.format(DateTimeFormatter.ofPattern(":yyyyMM"));
+        String key = USER_SIGN_KEY + userId + keySuffix;
+        // 4.获取今天是本月的第几天
+        int dayOfMonth = now.getDayOfMonth();
+        // 5.获取本月截止今天为止的所有的签到记录，返回的是一个十进制的数字 BITFIELD sign:5:202203 GET u14 0
+        List<Long> result = stringRedisTemplate.opsForValue().bitField(
+                key,
+                BitFieldSubCommands.create()
+                        .get(BitFieldSubCommands.BitFieldType.unsigned(dayOfMonth)).valueAt(0)
+        );
+        if (result == null || result.isEmpty()) {
+            // 没有任何签到结果
+            return Result.ok(0);
+        }
+        Long num = result.get(0);
+        if (num == null || num == 0) {
+            return Result.ok(0);
+        }
+        // 6.循环遍历
+        int count = 0;
+        while (true) {
+            // 6.1.让这个数字与1做与运算，得到数字的最后一个bit位  // 判断这个bit位是否为0
+            if ((num & 1) == 0) {
+                // 如果为0，说明未签到，结束
+                break;
+            }else {
+                // 如果不为0，说明已签到，计数器+1
+                count++;
+            }
+            // 把数字右移一位，抛弃最后一个bit位，继续下一个bit位
+            num >>>= 1;
+        }
+        return Result.ok(count);
+    }
+
+    @Override
+    public Result logout() {
+       if (UserHolder.getUser()!=null){
+           UserHolder.removeUser();
+       }
+        return Result.ok();
+    }
+
+    @Override
+    public Result changeName(String nickName) {
+        UserDTO user = UserHolder.getUser();
+        Long id = user.getId();
+        User user1 = query().eq("id", id).one();
+        user1.setNickName(nickName);
+        updateById(user1);
+        UserHolder.updateNickname(nickName);
+        log.info("修改成功"+UserHolder.getUser());
+        String key = "user:"+id;
+        stringRedisTemplate.delete(key);
+        return Result.ok(user1);
+    }
+
+    @Override
+    public Result getMe() {
+        //User user = userService.getById(id);
+//        UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
+        UserDTO userdto = UserHolder.getUser();
+        Long userId = userdto.getId();
+        String key = "user:"+userId;
+        String cache = stringRedisTemplate.opsForValue().get(key);
+        User user = null;
+        if (cache!=null){
+            user = JSONUtil.toBean(cache, User.class);
+        }else {
+            // 查询详情
+            user = this.getById(userId);
+            if (user == null) {
+                // 没有详情，应该是第一次查看详情
+                return Result.ok();
+            }
+            stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(user));
+            UserHolder.removeUser();
+
+        }
+        // 返回
+        UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
+        UserHolder.saveUser(userdto);
+        return Result.ok(userDTO);
+    }
+
 
     private User createUserWithPhone(String phone) {
         //1,创建用户

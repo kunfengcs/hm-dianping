@@ -4,6 +4,8 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
 import com.hmdp.dto.Result;
 import com.hmdp.utils.SystemConstants;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,10 +15,12 @@ import java.io.IOException;
 import java.util.UUID;
 
 @Slf4j
+@Api(tags = "文件上传模块")
 @RestController
 @RequestMapping("upload")
 public class UploadController {
 
+    @ApiOperation(value = "图片上传", notes = "图片上传")
     @PostMapping("blog")
     public Result uploadImage(@RequestParam("file") MultipartFile image) {
         try {
@@ -34,6 +38,7 @@ public class UploadController {
         }
     }
 
+    @ApiOperation(value = "删除图片", notes = "删除图片")
     @GetMapping("/blog/delete")
     public Result deleteBlogImg(@RequestParam("name") String filename) {
         File file = new File(SystemConstants.IMAGE_UPLOAD_DIR, filename);

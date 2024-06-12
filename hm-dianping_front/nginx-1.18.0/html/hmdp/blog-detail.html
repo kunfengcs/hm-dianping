@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
-    <title>黑马点评</title>
+    <title>点评系统</title>
     <!-- 引入样式 -->
     <link rel="stylesheet" href="./css/element.css">
 
@@ -123,7 +123,7 @@
                         </div>
                     </div>
 
-
+<br>
                     <div v-if="item.children.length" style="padding-left: 50px;">
                         <div v-for="subItem in item.children" :key="subItem.id"
                              style="background-color: #f0f0f0; padding: 5px 20px">
@@ -138,7 +138,7 @@
                 </div>
 
                                 <div style="display: flex; line-height: 20px; margin-top: 5px; padding-left: 5px">
-                                    <div style="width: 200px;">
+                                    <div>
                                         <i class="el-icon-time"></i><span style="margin-left: 5px">{{ subItem.createTime
                                         }}</span>
             </div>

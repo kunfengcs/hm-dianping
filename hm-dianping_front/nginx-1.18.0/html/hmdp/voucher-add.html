@@ -131,8 +131,9 @@
                 if (this.voucher.shopId) {
                     axios.get("/shop/" + this.voucher.shopId)
                         .then(response => {
-                            if (response.data.success && response.data.data.name) {
-                                this.shopName = response.data.data.name;
+                            console.log(response.data)
+                            if (response.data.name) {
+                                this.shopName = response.data.name;
                             } else {
                                 this.$message.error("未能获取到商户信息！");
                             }

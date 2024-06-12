@@ -1,19 +1,24 @@
 package com.hmdp.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmdp.dto.Result;
 import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.Follow;
+import com.hmdp.entity.User;
 import com.hmdp.mapper.FollowMapper;
 import com.hmdp.service.IFollowService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmdp.service.IUserService;
 import com.hmdp.utils.UserHolder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -39,6 +44,12 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
+    /**
+     * 关注或者取关操作
+     * @param followUserId
+     * @param isFollow
+     * @return
+     */
     @Override
     public Result follow(Long followUserId, Boolean isFollow) {
         // 1,获取登录用户
@@ -65,9 +76,18 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
                 stringRedisTemplate.opsForSet().remove(key,followUserId.toString());
             }
         }
+        String key3 = "followMine:" + userId;
+        String key4 = "followYours:" + userId;
+        stringRedisTemplate.delete(key3);
+        stringRedisTemplate.delete(key4);
         return Result.ok();
     }
 
+    /**
+     * 判断是否关注
+     * @param followUserId
+     * @return
+     */
     @Override
     public Result isFollow(Long followUserId) {
         // 1,获取登录用户
@@ -99,5 +119,54 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
                 .map(user -> BeanUtil.copyProperties(user, UserDTO.class))
                 .collect(Collectors.toList());
         return Result.ok(users);
+    }
+
+    @Override
+    public Result followMine(Long id) {
+        Long userId = UserHolder.getUser().getId();
+        String key = "followMine:" + userId;
+        String s = stringRedisTemplate.opsForValue().get(key);
+        List<User> userList = new ArrayList<>();
+
+        if (s != null) {
+          userList = JSONUtil.toList(s, User.class);
+            return Result.ok(userList);
+        } else {
+            List<Follow> follow_user_id = query().eq("follow_user_id", userId).list();
+            if (follow_user_id.size() == 0) {
+                return Result.ok();
+            }
+            for (Follow f:follow_user_id){
+                Long owner = f.getUserId();
+                User user = userService.getById(owner);
+                userList.add(user);
+            }
+            stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(userList));
+            return Result.ok(userList);
+        }
+    }
+    @Override
+    public Result followYours(Long id) {
+        Long userId = UserHolder.getUser().getId();
+        String key = "followYours:" + userId;
+        String s = stringRedisTemplate.opsForValue().get(key);
+        List<User> userList = new ArrayList<>();
+
+        if (s != null) {
+            userList = JSONUtil.toList(s, User.class);
+            return Result.ok(userList);
+        } else {
+            List<Follow> follow_user_id = query().eq("user_id", userId).list();
+            if (follow_user_id.size() == 0) {
+                return Result.ok();
+            }
+            for (Follow f:follow_user_id){
+                Long owner = f.getFollowUserId();
+                User user = userService.getById(owner);
+                userList.add(user);
+            }
+            stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(userList));
+            return Result.ok(userList);
+        }
     }
 }

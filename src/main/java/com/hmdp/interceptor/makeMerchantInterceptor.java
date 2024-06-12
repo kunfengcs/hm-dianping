@@ -5,7 +5,9 @@ import cn.hutool.core.util.StrUtil;
 import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.User;
 import com.hmdp.service.IUserService;
+import com.hmdp.utils.JwtTokenUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -27,9 +29,13 @@ public class makeMerchantInterceptor implements HandlerInterceptor {
 
     private IUserService userService;
 
-    public makeMerchantInterceptor(StringRedisTemplate stringRedisTemplate, IUserService userService) {
+    private JwtTokenUtil jwtTokenUtil;
+
+
+    public makeMerchantInterceptor(StringRedisTemplate stringRedisTemplate, IUserService userService,JwtTokenUtil jwtTokenUtil) {
         this.stringRedisTemplate = stringRedisTemplate;
         this.userService = userService;
+        this.jwtTokenUtil = jwtTokenUtil;
     }
 
     @Override
@@ -37,11 +43,11 @@ public class makeMerchantInterceptor implements HandlerInterceptor {
         log.info("拦截到请求");
         //1,获取请求头中的token
         String token = request.getHeader("authorization");
-        System.err.println("token:"+token);
+//        System.err.println("token:"+token);
         if (StrUtil.isBlank(token)) {
             return true;
         }
-        //2,基于TOKEN获取Redis 中的用户
+        /*//2,基于TOKEN获取Redis 中的用户
         String key = LOGIN_USER_KEY + token;
         Map<Object, Object> userMap = stringRedisTemplate.opsForHash().entries(key);
         //3，判断用户是否存在
@@ -49,7 +55,10 @@ public class makeMerchantInterceptor implements HandlerInterceptor {
             return true;
         }
         //5，将查询到的hash数据转为UserDTO
-        UserDTO userDTO = BeanUtil.fillBeanWithMap(userMap, new UserDTO(), false);
+        UserDTO userDTO = BeanUtil.fillBeanWithMap(userMap, new UserDTO(), false);*/
+
+
+        UserDTO userDTO = jwtTokenUtil.getValueFormClaims(token, "user", UserDTO.class);
 
         Long id = userDTO.getId();
         User user = userService.getById(id);

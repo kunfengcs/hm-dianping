@@ -6,7 +6,9 @@ import cn.hutool.json.JSONUtil;
 import com.hmdp.dto.Result;
 import com.hmdp.entity.ShopType;
 import com.hmdp.service.IShopTypeService;
-import io.netty.util.internal.StringUtil;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,31 +26,22 @@ import java.util.concurrent.TimeUnit;
  * @author 王坤峰
  * @since 2021-12-22
  */
+@Api(tags = "商铺类型模块")
 @RestController
 @RequestMapping("/shop-type")
 public class ShopTypeController {
     @Resource
-    private StringRedisTemplate stringRedisTemplate;
-    @Resource
     private IShopTypeService typeService;
 
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+
+    @ApiOperation(value = "查询所有商铺类型", notes = "获取所有商铺类型")
     @GetMapping("list")
     public Result queryTypeList() {
-        String key = "SHOP_TYPE_KEY";
-        String shopType = stringRedisTemplate.opsForValue().get(key);
-        if (StrUtil.isNotBlank(shopType)){
-            // 将 JSONArray 转为 List<ShopType>
-            List<ShopType> typeList = JSONUtil.parseArray(shopType).toList(ShopType.class);
-            return Result.ok(typeList);
-        }
-
-        List<ShopType> typeList = typeService
-                .query().orderByAsc("sort").list();
-        if (typeList == null){
-            return Result.fail("商品类型空");
-        }
-        stringRedisTemplate.opsForValue().set(key
-                ,JSONUtil.toJsonStr(typeList),30, TimeUnit.MINUTES);
-        return Result.ok(typeList);
+//        List<ShopType> typeList = typeService
+//                .query().orderByAsc("sort").list();
+         return typeService.queryByList();
+//        return Result.ok(typeList);
     }
 }

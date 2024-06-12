@@ -3,6 +3,7 @@ package com.hmdp.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hmdp.dto.Result;
@@ -65,7 +66,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     }
 
     @Override
-    public Result querBlogById(Long id) {
+    public Result queryBlogById(Long id) {
         Blog blog = getById(id);
         //如果为空
         if (blog == null) {
@@ -160,6 +161,27 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         if (!isSuccess) {
             return Result.fail("新增笔记失败");
         }
+
+        //查询发布了多少条博客
+        Long current = query().eq("user_id", user.getId()).count();
+        current = current / SystemConstants.MAX_PAGE_SIZE;
+        Page<Blog> page = query().eq("user_id", user.getId())
+                .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
+        // 从缓存中存数据
+        String key = "blog:of:" + user.getId() + "_" + current;
+        List<Blog> records = page.getRecords();
+        long pageTotal = page.getPages();
+        if (pageTotal == 0){
+            return Result.ok();
+        }
+        // 将查询到的数据存入Map中
+        Map<String, Object> resultData = new HashMap<>();
+        resultData.put("records", records);
+        resultData.put("totalPage", pageTotal);
+
+        // 将数据转换为JSON字符串，并存入缓存
+        stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(resultData));
+
         // 3,feed流实现，
         // 3,查询笔记作者的所有粉丝 select * from tb_follow where follow_user_id = ?
         followService.query().eq("follow_user_id",user.getId()).list().forEach(follow ->{

@@ -4,6 +4,8 @@ package com.hmdp.controller;
 import com.hmdp.dto.Result;
 import com.hmdp.service.IVoucherOrderService;
 import com.hmdp.service.impl.VoucherOrderServiceImpl;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,6 +21,7 @@ import javax.annotation.Resource;
  * @author 王坤峰
  * @since 2021-12-22
  */
+@Api(tags = "优惠券订单模块")
 @RestController
 @RequestMapping("/voucher-order")
 public class VoucherOrderController {
@@ -44,6 +47,7 @@ public class VoucherOrderController {
      * @param voucherId 待秒杀的优惠券编号
      * @return 秒杀结果封装在 {@link Result} 对象中，包含成功状态及可能的订单ID或错误信息
      */
+    @ApiOperation(value = "秒杀优惠券", notes = "秒杀优惠券")
     @PostMapping("seckill/{id}")
     public Result seckillVoucher(@PathVariable("id") Long voucherId) {
         return voucherOrderService.seckillVoucher(voucherId);

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.hmdp.config.BooleanCharTypeHandler;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -90,6 +91,9 @@ public class Blog implements Serializable {
      * 更新时间
      */
     private LocalDateTime updateTime;
+
+    @TableField(value = "isRead", typeHandler= BooleanCharTypeHandler.class)
+    private Boolean isRead;
 
 
 }
