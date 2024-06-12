@@ -3,6 +3,7 @@
 #### 介绍
 毕业设计项目
 同城生活O2O系统平台后端
+其实就是黑马点评
 
 #### [项目前端](dianping_front/nginx-1.18.0/html/hmdp)
 ## 使用的技术
@@ -37,3 +38,7 @@
 #### 需要在 Nginx中创建temp文件夹
 否则Nginx 无法启动
 报错：2024/04/15 13:39:34 [emerg] 29240#27228: CreateDirectory() "E:\sh_sg\graduation_project\hmdp\hm-dianping_front\nginx-1.18.0/temp/client_body_temp" failed (3: The system cannot find the path specified)
+
+
+### 
+其实就是黑马点评
